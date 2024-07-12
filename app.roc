@@ -36,46 +36,45 @@ handleReq = \req ->
     when (req.method, urlSegments) is
         (Get, ["static", .. as rest]) -> getStaticFile (rest |> Str.joinWith "/" |> Str.withPrefix "./")
         (Get, ["favicon.ico"]) -> getStaticFile "./favicon.ico"
-        (Get, ["dashboard"]) -> baseWithBody dashboardRtl navBarRtl |> respondTemplate
-        (Get, [""]) -> baseWithBody "NOTINH HERE" navBarRtl |> respondTemplate
-        (Get, ["asdf"]) -> headerRtl |> respondTemplate
+        (Get, [""]) -> baseWithBodyRTL { header: headerRTL, content: dashboardRTL, navBar: navBarRTL } |> respondTemplate
+        (Get, ["asdf"]) -> headerRTL |> respondTemplate
         _ -> Task.err (URLNotFound req.url)
 
 staticBaseUrl = "static"
 
-baseWithBody = \content, navBar -> Generated.Pages.baseWithBody {
-        content,
-        navBarRtl: navBar,
-        headerRtl,
+baseWithBodyRTL = \{ header, content, navBar } -> Generated.Pages.baseWithBody {
+        contentRTL: content,
+        navBarRTL: navBar,
+        headerRTL: header,
         isWhiteBackground: Bool.true,
     }
 
-navBarRtl = Generated.Pages.navBarDashboard {
+navBarRTL = Generated.Pages.navBarDashboard {
     relURL: "",
     staticBaseUrl,
 }
 
-dashboardRtl = Generated.Pages.dashboard {
-    content: "NOTHING TO SEE YET",
-    footerDashboardRrl,
-    sidebarRtl,
+dashboardRTL = Generated.Pages.dashboard {
+    contentRTL: "NOTHING TO SEE YET",
+    footerDashboardRTL,
+    sidebarRTL,
 }
 
-footerDashboardRrl = Generated.Pages.footerDashboard {
+footerDashboardRTL = Generated.Pages.footerDashboard {
     copyright: "Flowbite Authors",
 }
 
-sidebarRtl = Generated.Pages.sidebar {
+sidebarRTL = Generated.Pages.sidebar {
     page: SettingsPage,
     relURL: "/",
 }
 
-headerRtl =
+headerRTL =
     Generated.Pages.header {
         authors: "authors",
         description: "description",
         staticBaseUrl,
-        stylesheetRtl: Generated.Pages.stylesheet { staticBaseUrl },
+        stylesheetRTL: Generated.Pages.stylesheet { staticBaseUrl },
         title: "title",
     }
 
@@ -84,11 +83,10 @@ getStaticFile = \path ->
 
     body =
         Path.fromStr path
-        |> File.readBytes
-        |> Task.mapErr! \err -> ErrGettingStaticFile path err
+            |> File.readBytes
+            |> Task.mapErr! \err -> ErrGettingStaticFile path err
 
     bytesRead = List.len body
-
     info! "Read $(Num.toStr bytesRead) bytes for static file $(path)"
 
     contentTypeHeader =
@@ -120,7 +118,7 @@ respondTemplate = \html ->
         headers: [
             { name: "Content-Type", value: Str.toUtf8 "text/html; charset=utf-8" },
         ],
-        body: html |> Generated.Pages.render |> Str.toUtf8,
+        body: html |> Str.toUtf8,
     }
 
 respondCodeLogError : Str, U16 -> Task Response []

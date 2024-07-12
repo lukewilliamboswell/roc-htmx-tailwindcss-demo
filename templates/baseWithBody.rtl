@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="en" class="dark">
   <head>
-    {{{ model.headerRtl }}}
+    {{{ model.headerRTL }}}
   </head>
-    {{{model.navBarRtl}}}
+    {{{ model.navBarRTL }}}
     <body class="{|if model.isWhiteBackground |}bg-white dark:bg-gray-900{|else|}bg-gray-50 dark:bg-gray-800{|endif|}">
-    {{{model.content}}}
+    {{{ model.contentRTL }}}
     </body>
 </html>
