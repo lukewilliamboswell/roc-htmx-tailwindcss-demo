@@ -81,16 +81,37 @@ headerRtl =
 
 getStaticFile : Str -> Task Response _
 getStaticFile = \path ->
-    File.readBytes (Path.fromStr path)
-    |> Task.await \body ->
-        Task.ok {
-            status: 200,
-            headers: [
-                { name: "Cache-Control", value: Str.toUtf8 "max-age=3600" },
-            ],
-            body: body,
-        }
-    |> Task.mapErr \err -> ErrGettingStaticFile path err
+
+    body =
+        Path.fromStr path
+        |> File.readBytes
+        |> Task.mapErr! \err -> ErrGettingStaticFile path err
+
+    bytesRead = List.len body
+
+    info! "Read $(Num.toStr bytesRead) bytes for static file $(path)"
+
+    contentTypeHeader =
+        if Str.endsWith path ".svg" then
+            { name: "Content-Type", value: Str.toUtf8 "image/svg+xml" }
+        else if Str.endsWith path ".css" then
+            { name: "Content-Type", value: Str.toUtf8 "text/css" }
+        else if Str.endsWith path ".js" then
+            { name: "Content-Type", value: Str.toUtf8 "application/javascript" }
+        else if Str.endsWith path ".ico" then
+            { name: "Content-Type", value: Str.toUtf8 "image/x-icon" }
+        else
+            { name: "Content-Type", value: Str.toUtf8 "application/octet-stream" }
+
+    Task.ok {
+        status: 200,
+        headers: [
+            # TODO increase max-age for a real app
+            { name: "Cache-Control", value: Str.toUtf8 "max-age=120" },
+            contentTypeHeader,
+        ],
+        body,
+    }
 
 respondTemplate : _ -> Task Response []_
 respondTemplate = \html ->
@@ -118,3 +139,7 @@ logRequest = \req ->
     url = req.url
     body = req.body |> Str.fromUtf8 |> Result.withDefault "<invalid utf8 body>"
     Stdout.line! "$(date) $(method) $(url) $(body)"
+
+info : Str -> Task {} _
+info = \msg ->
+    Stdout.line! "\u(001b)[34mINFO:\u(001b)[0m $(msg)"
