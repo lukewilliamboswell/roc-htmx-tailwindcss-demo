@@ -66,19 +66,26 @@ handleReq = \req ->
 
             baseWithBodyRTL {
                 header: headerRTL,
-                content: dashboardRTL { displaySideBar },
+                content: dashboardRTL {
+                    displaySideBar,
+                    contentRTL: settingsPage,
+                },
                 navBar: navBarRTL { displaySideBar, displayDarkMode },
             }
             |> respondTemplate [
                 { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
             ]
 
-        (Get, ["dashboard","sidebar"]) -> sidebarRTL |> respondTemplate []
-
+        (Get, ["dashboard", "sidebar"]) -> sidebarRTL |> respondTemplate []
         (Get, ["asdf"]) -> headerRTL |> respondTemplate []
         _ -> Task.err (URLNotFound req.url)
 
 staticBaseUrl = "static"
+
+settingsPage = Generated.Pages.settingsPage {
+    staticBaseUrl,
+    pageName: "Settings",
+}
 
 baseWithBodyRTL = \{ header, content, navBar } -> Generated.Pages.baseWithBody {
         contentRTL: content,
@@ -94,8 +101,8 @@ navBarRTL = \{ displaySideBar, displayDarkMode } -> Generated.Pages.navBarDashbo
         staticBaseUrl,
     }
 
-dashboardRTL = \{ displaySideBar } -> Generated.Pages.dashboard {
-        contentRTL: "NOTHING TO SEE YET",
+dashboardRTL = \{ displaySideBar, contentRTL } -> Generated.Pages.dashboard {
+        contentRTL,
         footerDashboardRTL,
         displaySideBar,
         sidebarRTL,
@@ -139,6 +146,14 @@ getStaticFile = \path ->
             { name: "Content-Type", value: Str.toUtf8 "application/javascript" }
         else if Str.endsWith path ".ico" then
             { name: "Content-Type", value: Str.toUtf8 "image/x-icon" }
+        else if Str.endsWith path ".png" then
+            { name: "Content-Type", value: Str.toUtf8 "image/png" }
+        else if Str.endsWith path ".jpg" then
+            { name: "Content-Type", value: Str.toUtf8 "image/jpeg" }
+        else if Str.endsWith path ".jpeg" then
+            { name: "Content-Type", value: Str.toUtf8 "image/jpeg" }
+        else if Str.endsWith path ".gif" then
+            { name: "Content-Type", value: Str.toUtf8 "image/gif" }
         else
             { name: "Content-Type", value: Str.toUtf8 "application/octet-stream" }
 
