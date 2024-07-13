@@ -49,15 +49,31 @@ handleReq = \req ->
                 |> Result.map \val -> if val == "true" then Bool.true else Bool.false
                 |> Result.withDefault Bool.false
 
+            displayDarkMode =
+                queryParams
+                |> Dict.get "dark"
+                |> Result.map \val -> if val == "true" then Bool.true else Bool.false
+                |> Result.withDefault Bool.false
+
+            newParams =
+                fromBool = \b -> if b then "true" else "false"
+
+                queryParams
+                |> Dict.insert "dark" (fromBool displayDarkMode)
+                |> Dict.insert "sidebar" (fromBool displaySideBar)
+
+            newUrl = Helpers.replaceQueryParams { url: req.url, params: newParams }
+
             baseWithBodyRTL {
                 header: headerRTL,
                 content: dashboardRTL { displaySideBar },
-                navBar: navBarRTL { displaySideBar },
+                navBar: navBarRTL { displaySideBar, displayDarkMode },
             }
-            |> respondTemplate
+            |> respondTemplate [
+                { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
+            ]
 
-        # (Get, ["dashboard", "sidebar"]) -> sidebarRTL |> respondTemplate
-        (Get, ["asdf"]) -> headerRTL |> respondTemplate
+        (Get, ["asdf"]) -> headerRTL |> respondTemplate []
         _ -> Task.err (URLNotFound req.url)
 
 staticBaseUrl = "static"
@@ -69,8 +85,9 @@ baseWithBodyRTL = \{ header, content, navBar } -> Generated.Pages.baseWithBody {
         isWhiteBackground: Bool.true,
     }
 
-navBarRTL = \{ displaySideBar } -> Generated.Pages.navBarDashboard {
+navBarRTL = \{ displaySideBar, displayDarkMode } -> Generated.Pages.navBarDashboard {
         displaySideBar,
+        displayDarkMode,
         relURL: "",
         staticBaseUrl,
     }
@@ -93,11 +110,11 @@ sidebarRTL = Generated.Pages.sidebar {
 
 headerRTL =
     Generated.Pages.header {
-        authors: "authors",
-        description: "description",
+        authors: "Themesberg",
+        description: "Get started with a free and open-source admin dashboard layout built with Tailwind CSS and Flowbite featuring charts, widgets, CRUD layouts, authentication pages, and more",
         staticBaseUrl,
         stylesheetRTL: Generated.Pages.stylesheet { staticBaseUrl },
-        title: "title",
+        title: "Tailwind CSS Admin Dashboard - Flowbite",
     }
 
 getStaticFile : Str -> Task Response _
@@ -132,11 +149,11 @@ getStaticFile = \path ->
         body,
     }
 
-respondTemplate : _ -> Task Response []_
-respondTemplate = \html ->
+respondTemplate : Str, _ -> Task Response []_
+respondTemplate = \html, headers ->
     Task.ok {
         status: 200,
-        headers: [
+        headers: List.concat headers [
             { name: "Content-Type", value: Str.toUtf8 "text/html; charset=utf-8" },
         ],
         body: html |> Str.toUtf8,

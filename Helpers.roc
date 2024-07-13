@@ -5,6 +5,7 @@ module [
     parseQueryParams,
     queryParamsToUrl,
     parsePagedParams,
+    replaceQueryParams,
 ]
 
 import pf.Task exposing [Task]
@@ -87,3 +88,9 @@ expect
     |> Result.try parsePagedParams
     ==
     Err (InvalidQuery "[\"/bigTask\"]")
+
+replaceQueryParams : {url: Str, params: Dict Str Str} -> Str
+replaceQueryParams = \{url, params} ->
+    when Str.splitFirst url "?" is
+        Ok {before} ->  "$(before)?$(queryParamsToUrl params)"
+        Err NotFound -> "$(url)?$(queryParamsToUrl params)"
