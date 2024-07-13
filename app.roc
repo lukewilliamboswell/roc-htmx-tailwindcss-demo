@@ -52,11 +52,11 @@ handleReq = \req ->
             baseWithBodyRTL {
                 header: headerRTL,
                 content: dashboardRTL { displaySideBar },
-                navBar: navBarRTL,
+                navBar: navBarRTL { displaySideBar },
             }
             |> respondTemplate
 
-        (Get, ["dashboard", "sidebar"]) -> sidebarRTL |> respondTemplate
+        # (Get, ["dashboard", "sidebar"]) -> sidebarRTL |> respondTemplate
         (Get, ["asdf"]) -> headerRTL |> respondTemplate
         _ -> Task.err (URLNotFound req.url)
 
@@ -69,10 +69,11 @@ baseWithBodyRTL = \{ header, content, navBar } -> Generated.Pages.baseWithBody {
         isWhiteBackground: Bool.true,
     }
 
-navBarRTL = Generated.Pages.navBarDashboard {
-    relURL: "",
-    staticBaseUrl,
-}
+navBarRTL = \{ displaySideBar } -> Generated.Pages.navBarDashboard {
+        displaySideBar,
+        relURL: "",
+        staticBaseUrl,
+    }
 
 dashboardRTL = \{ displaySideBar } -> Generated.Pages.dashboard {
         contentRTL: "NOTHING TO SEE YET",
@@ -125,8 +126,7 @@ getStaticFile = \path ->
     Task.ok {
         status: 200,
         headers: [
-            # TODO increase max-age for a real app
-            { name: "Cache-Control", value: Str.toUtf8 "max-age=120" },
+            { name: "Cache-Control", value: Str.toUtf8 "max-age=3600" },
             contentTypeHeader,
         ],
         body,
