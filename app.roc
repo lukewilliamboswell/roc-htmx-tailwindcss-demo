@@ -14,6 +14,7 @@ import pf.File
 import pf.Url
 import ansi.Color
 import Generated.Pages
+import Helpers exposing [respondHtml, decodeFormValues, parseQueryParams]
 
 main : Request -> Task Response []
 main = \req -> Task.onErr (handleReq req) \err ->
@@ -36,7 +37,26 @@ handleReq = \req ->
     when (req.method, urlSegments) is
         (Get, ["static", .. as rest]) -> getStaticFile (rest |> Str.joinWith "/" |> Str.withPrefix "./")
         (Get, ["favicon.ico"]) -> getStaticFile "./favicon.ico"
-        (Get, [""]) -> baseWithBodyRTL { header: headerRTL, content: dashboardRTL, navBar: navBarRTL } |> respondTemplate
+        (Get, [""]) ->
+            queryParams =
+                req.url
+                |> parseQueryParams
+                |> Result.withDefault (Dict.empty {})
+
+            displaySideBar =
+                queryParams
+                |> Dict.get "sidebar"
+                |> Result.map \val -> if val == "true" then Bool.true else Bool.false
+                |> Result.withDefault Bool.false
+
+            baseWithBodyRTL {
+                header: headerRTL,
+                content: dashboardRTL { displaySideBar },
+                navBar: navBarRTL,
+            }
+            |> respondTemplate
+
+        (Get, ["dashboard", "sidebar"]) -> sidebarRTL |> respondTemplate
         (Get, ["asdf"]) -> headerRTL |> respondTemplate
         _ -> Task.err (URLNotFound req.url)
 
@@ -54,11 +74,12 @@ navBarRTL = Generated.Pages.navBarDashboard {
     staticBaseUrl,
 }
 
-dashboardRTL = Generated.Pages.dashboard {
-    contentRTL: "NOTHING TO SEE YET",
-    footerDashboardRTL,
-    sidebarRTL,
-}
+dashboardRTL = \{ displaySideBar } -> Generated.Pages.dashboard {
+        contentRTL: "NOTHING TO SEE YET",
+        footerDashboardRTL,
+        displaySideBar,
+        sidebarRTL,
+    }
 
 footerDashboardRTL = Generated.Pages.footerDashboard {
     copyright: "Flowbite Authors",
