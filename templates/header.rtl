@@ -47,7 +47,22 @@
         setDarkMode();
     });
 
-    // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+    // On page load or when changing themes
     setDarkMode()
+
+    function onResizeOrLoad() {
+        // Tailwind CSS 'lg' breakpoint for desktop
+        const desktopWidth = 1024;
+        const windowWidth = window.innerWidth;
+
+        if (windowWidth >= desktopWidth) {
+            htmx.trigger("#sidebar", "pageLoadedDesktop");
+        } else {
+            document.getElementById('sidebar').classList.add('hidden');
+        }
+    }
+
+    window.addEventListener('load', onResizeOrLoad);
+    window.addEventListener('resize', onResizeOrLoad);
 
 </script>

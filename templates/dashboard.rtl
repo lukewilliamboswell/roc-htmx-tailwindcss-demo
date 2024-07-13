@@ -3,7 +3,13 @@
     {|if model.displaySideBar |}
         {{{ model.sidebarRTL }}}
     {|else|}
-        <aside id="sidebar" class="hidden"></aside>
+        <aside
+            id="sidebar"
+            class="hidden"
+            hx-get="dashboard/sidebar"
+            hx-swap="outerHTML"
+            hx-trigger="pageLoadedDesktop"
+        ></aside>
     {|endif|}
 
   <div id="main-content" class="relative w-full h-full overflow-y-auto bg-gray-50 lg:ml-64 dark:bg-gray-900">

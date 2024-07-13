@@ -73,6 +73,8 @@ handleReq = \req ->
                 { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
             ]
 
+        (Get, ["dashboard","sidebar"]) -> sidebarRTL |> respondTemplate []
+
         (Get, ["asdf"]) -> headerRTL |> respondTemplate []
         _ -> Task.err (URLNotFound req.url)
 
