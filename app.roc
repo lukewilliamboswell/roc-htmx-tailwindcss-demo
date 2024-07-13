@@ -2,6 +2,7 @@ app [main] {
     pf: platform "https://github.com/roc-lang/basic-webserver/releases/download/0.5.0/Vq-iXfrRf-aHxhJpAh71uoVUlC-rsWvmjzTYOJKhu4M.tar.br",
     html: "https://github.com/Hasnep/roc-html/releases/download/v0.6.0/IOyNfA4U_bCVBihrs95US9Tf5PGAWh3qvrBN4DRbK5c.tar.br",
     ansi: "https://github.com/lukewilliamboswell/roc-ansi/releases/download/0.1.1/cPHdNPNh8bjOrlOgfSaGBJDz6VleQwsPdW0LJK6dbGQ.tar.br",
+    json: "https://github.com/lukewilliamboswell/roc-json/releases/download/0.10.0/KbIfTNbxShRX1A1FgXei1SpO5Jn8sgP6HP6PXbi-xyA.tar.br",
 }
 
 import pf.Stdout
@@ -12,6 +13,7 @@ import pf.Utc
 import pf.Path
 import pf.File
 import pf.Url
+import json.Json
 import ansi.Color
 import Generated.Pages
 import Helpers exposing [respondHtml, decodeFormValues, parseQueryParams]
@@ -37,7 +39,7 @@ handleReq = \req ->
     when (req.method, urlSegments) is
         (Get, ["static", .. as rest]) -> getStaticFile (rest |> Str.joinWith "/" |> Str.withPrefix "./")
         (Get, ["favicon.ico"]) -> getStaticFile "./favicon.ico"
-        (Get, [""]) ->
+        (Get, [""]) | (Get, ["settings"]) ->
             queryParams =
                 req.url
                 |> parseQueryParams
@@ -77,10 +79,73 @@ handleReq = \req ->
             ]
 
         (Get, ["dashboard", "sidebar"]) -> sidebarRTL |> respondTemplate []
+
+        (Get, ["products"]) ->
+            queryParams =
+                req.url
+                |> parseQueryParams
+                |> Result.withDefault (Dict.empty {})
+
+            displaySideBar =
+                queryParams
+                |> Dict.get "sidebar"
+                |> Result.map \val -> if val == "true" then Bool.true else Bool.false
+                |> Result.withDefault Bool.false
+
+            displayDarkMode =
+                queryParams
+                |> Dict.get "dark"
+                |> Result.map \val -> if val == "true" then Bool.true else Bool.false
+                |> Result.withDefault Bool.false
+
+            products = getProductsFromJSONFile!
+
+            baseWithBodyRTL {
+                header: headerRTL,
+                content: dashboardRTL {
+                    displaySideBar,
+                    contentRTL: productsPage {
+                        products,
+                    },
+                },
+                navBar: navBarRTL { displaySideBar, displayDarkMode },
+            }
+            |> respondTemplate []
+
         (Get, ["asdf"]) -> headerRTL |> respondTemplate []
         _ -> Task.err (URLNotFound req.url)
 
 staticBaseUrl = "static"
+
+productsPage = \{products} -> Generated.Pages.productsPage {
+        products,
+    }
+
+Product : {
+    name : Str,
+    category : Str,
+    technology : Str,
+    id : U64,
+    description : Str,
+    price : Str,
+    discount : Str,
+}
+
+getProductsFromJSONFile : Task (List Product) _
+getProductsFromJSONFile =
+
+    path = "./products.json"
+
+    bytes =
+        File.readBytes (Path.fromStr path)
+            |> Task.mapErr! \err -> ErrReadingJSONFile path err
+
+    products =
+        Decode.fromBytes bytes Json.utf8
+            |> Task.fromResult
+            |> Task.mapErr! \err -> ErrDecodingJSONFile path err
+
+    Task.ok products
 
 settingsPage = Generated.Pages.settingsPage {
     staticBaseUrl,
