@@ -16,7 +16,7 @@ import pf.Url
 import json.Json
 import ansi.Color
 import Generated.Pages
-#import Helpers exposing [parseQueryParams]
+import Helpers exposing [parseQueryParams]
 
 main : Request -> Task Response []
 main = \req -> Task.onErr (handleReq req) \err ->
@@ -39,53 +39,37 @@ handleReq = \req ->
     when (req.method, urlSegments) is
         (Get, ["static", .. as rest]) -> getStaticFile (rest |> Str.joinWith "/" |> Str.withPrefix "./")
         (Get, ["favicon.ico"]) -> getStaticFile "./favicon.ico"
-        (Get, [""]) | (Get, ["settings"]) ->
-            # queryParams =
-            #    req.url
-            #    |> parseQueryParams
-            #    |> Result.withDefault (Dict.empty {})
-            # displaySideBar =
-            #    queryParams
-            #    |> Dict.get "sidebar"
-            #    |> Result.map \val -> if val == "true" then Bool.true else Bool.false
-            #    |> Result.withDefault Bool.false
-            # displayDarkMode =
-            #    queryParams
-            #    |> Dict.get "dark"
-            #    |> Result.map \val -> if val == "true" then Bool.true else Bool.false
-            #    |> Result.withDefault Bool.false
-            # newParams =
-            #    fromBool = \b -> if b then "true" else "false"
-            #    queryParams
-            #    |> Dict.insert "dark" (fromBool displayDarkMode)
-            #    |> Dict.insert "sidebar" (fromBool displaySideBar)
-            # newUrl = Helpers.replaceQueryParams { url: req.url, params: newParams }
-            baseWithBodyRTL {
-                header: headerRTL,
-                content: dashboardRTL {
-                    contentRTL: settingsPage,
-                },
-                navBar: navBarRTL {},
-            }
-            |> respondTemplate []
+        (Get, [""]) | (Get, ["products"]) | (Get, ["settings"]) ->
+            queryParams =
+                req.url
+                |> parseQueryParams
+                |> Result.withDefault (Dict.empty {})
 
-        # |> respondTemplate [
-        #    { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
-        # ]
-        (Get, ["dashboard", "sidebar"]) -> sidebarRTL |> respondTemplate []
-        (Get, ["products"]) ->
-            products = getProductsFromJSONFile!
+            partial =
+                queryParams
+                |> Dict.get "partial"
+                |> Result.map \val -> if val == "true" then Bool.true else Bool.false
+                |> Result.withDefault Bool.false
 
-            baseWithBodyRTL {
-                header: headerRTL,
-                content: dashboardRTL {
-                    contentRTL: productsPage {
-                        products,
-                    },
-                },
-                navBar: navBarRTL {},
-            }
-            |> respondTemplate []
+            page =
+                (
+                    if List.startsWith urlSegments ["products"] then
+                        Task.ok ProductsPage
+                    else if List.startsWith urlSegments ["settings"] then
+                        Task.ok SettingsPage
+                    else
+                        Task.ok ProductsPage
+                        # TODO restore when we have a default page
+                        #Task.err (URLNotFound req.url)
+                )!
+
+            newParams =
+                queryParams
+                |> Dict.remove "partial"
+
+            newUrl = Helpers.replaceQueryParams { url: req.url, params: newParams }
+
+            if partial then respondPagePartial { newUrl, page } else respondPageFull { newUrl, page }
 
         (Get, ["asdf"]) -> headerRTL |> respondTemplate []
         _ -> Task.err (URLNotFound req.url)
@@ -126,6 +110,51 @@ settingsPage = Generated.Pages.settingsPage {
     staticBaseUrl,
     pageName: "Settings",
 }
+
+respondPageFull :
+    {
+        newUrl : Str,
+        page : [SettingsPage, ProductsPage],
+    }
+    -> Task Response _
+respondPageFull = \{ page, newUrl } ->
+
+    full = \contentRTL ->
+        baseWithBodyRTL {
+            header: headerRTL,
+            content: dashboardRTL { contentRTL },
+            navBar: navBarRTL {},
+        }
+        |> respondTemplate [
+            { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
+        ]
+
+    when page is
+        SettingsPage -> full settingsPage
+        ProductsPage ->
+            products = getProductsFromJSONFile!
+            full (productsPage { products })
+
+respondPagePartial :
+    {
+        newUrl : Str,
+        page : [SettingsPage, ProductsPage],
+    }
+    -> Task Response _
+respondPagePartial = \{ page, newUrl } ->
+    when page is
+        SettingsPage ->
+            settingsPage
+            |> respondTemplate [
+                { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
+            ]
+
+        ProductsPage ->
+            products = getProductsFromJSONFile!
+            productsPage { products }
+            |> respondTemplate [
+                { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
+            ]
 
 baseWithBodyRTL = \{ header, content, navBar } -> Generated.Pages.baseWithBody {
         contentRTL: content,

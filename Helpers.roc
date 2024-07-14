@@ -92,5 +92,7 @@ expect
 replaceQueryParams : {url: Str, params: Dict Str Str} -> Str
 replaceQueryParams = \{url, params} ->
     when Str.splitFirst url "?" is
+        Ok {before} if Dict.isEmpty params ->  "$(before)"
+        Err NotFound if Dict.isEmpty params -> "$(url)"
         Ok {before} ->  "$(before)?$(queryParamsToUrl params)"
         Err NotFound -> "$(url)?$(queryParamsToUrl params)"
