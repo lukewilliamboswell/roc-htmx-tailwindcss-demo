@@ -6,7 +6,7 @@ set -euxo pipefail
 # generate templates
 rm -rf Generated/
 mkdir Generated
-rtl -i ./templates -o ./Generated || true # currently a workaround for not being able to roc check from a parent
+rtl -e "html" -i ./templates -o ./Generated || true # currently a workaround for not being able to roc check from a parent
 (ls ./Generated/Pages.roc >> /dev/null 2>&1 && exit)
 cd ./Generated && roc check Pages.roc && cd ..
 
