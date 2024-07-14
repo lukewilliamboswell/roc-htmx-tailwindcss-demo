@@ -3,16 +3,20 @@
 # https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
 set -euxo pipefail
 
+ROC="${ROC:-'roc'}"
+
+echo $ROC
+
 # generate templates
 rm -rf Generated/
 mkdir Generated
 rtl -e "html" -i ./templates -o ./Generated || true # currently a workaround for not being able to roc check from a parent
 (ls ./Generated/Pages.roc >> /dev/null 2>&1 && exit)
-cd ./Generated && roc check Pages.roc && cd ..
+cd ./Generated && $ROC check Pages.roc && cd ..
 
 # build app
 rm -rf app
-roc build --optimize app.roc || true
+$ROC build --optimize app.roc || true
 (ls app >> /dev/null 2>&1 && exit)
 
 # build css
