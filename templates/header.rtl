@@ -85,11 +85,23 @@
         }
     }
 
+    function handleResize() {
+        if (window.innerWidth >= 1024) {
+            document.getElementById('sidebar-content').classList.remove('hidden');
+        } else {
+            document.getElementById('sidebar-content').classList.add('hidden');
+        }
+    }
+
     document.addEventListener("htmx:afterSettle", function (evt) {
         setDarkMode();
     });
 
     document.addEventListener("DOMContentLoaded", function () {
         setDarkMode();
+        handleResize();
     });
+
+    window.addEventListener('resize', handleResize);
+
 </script>

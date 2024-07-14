@@ -180,3 +180,7 @@
         height: calc(100vh - 4rem);
     }
 }
+
+#sidebar-content {
+    height: 100%;
+}
