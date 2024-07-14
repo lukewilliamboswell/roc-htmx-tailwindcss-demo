@@ -40,46 +40,39 @@ handleReq = \req ->
         (Get, ["static", .. as rest]) -> getStaticFile (rest |> Str.joinWith "/" |> Str.withPrefix "./")
         (Get, ["favicon.ico"]) -> getStaticFile "./favicon.ico"
         (Get, [""]) | (Get, ["settings"]) ->
-            queryParams =
-                req.url
-                |> parseQueryParams
-                |> Result.withDefault (Dict.empty {})
-
-            displaySideBar =
-                queryParams
-                |> Dict.get "sidebar"
-                |> Result.map \val -> if val == "true" then Bool.true else Bool.false
-                |> Result.withDefault Bool.false
-
-            displayDarkMode =
-                queryParams
-                |> Dict.get "dark"
-                |> Result.map \val -> if val == "true" then Bool.true else Bool.false
-                |> Result.withDefault Bool.false
-
-            newParams =
-                fromBool = \b -> if b then "true" else "false"
-
-                queryParams
-                |> Dict.insert "dark" (fromBool displayDarkMode)
-                |> Dict.insert "sidebar" (fromBool displaySideBar)
-
-            newUrl = Helpers.replaceQueryParams { url: req.url, params: newParams }
-
+            # queryParams =
+            #    req.url
+            #    |> parseQueryParams
+            #    |> Result.withDefault (Dict.empty {})
+            # displaySideBar =
+            #    queryParams
+            #    |> Dict.get "sidebar"
+            #    |> Result.map \val -> if val == "true" then Bool.true else Bool.false
+            #    |> Result.withDefault Bool.false
+            # displayDarkMode =
+            #    queryParams
+            #    |> Dict.get "dark"
+            #    |> Result.map \val -> if val == "true" then Bool.true else Bool.false
+            #    |> Result.withDefault Bool.false
+            # newParams =
+            #    fromBool = \b -> if b then "true" else "false"
+            #    queryParams
+            #    |> Dict.insert "dark" (fromBool displayDarkMode)
+            #    |> Dict.insert "sidebar" (fromBool displaySideBar)
+            # newUrl = Helpers.replaceQueryParams { url: req.url, params: newParams }
             baseWithBodyRTL {
                 header: headerRTL,
                 content: dashboardRTL {
-                    displaySideBar,
                     contentRTL: settingsPage,
                 },
-                navBar: navBarRTL { displaySideBar, displayDarkMode },
+                navBar: navBarRTL {},
             }
-            |> respondTemplate [
-                { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
-            ]
+            |> respondTemplate []
 
+        # |> respondTemplate [
+        #    { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
+        # ]
         (Get, ["dashboard", "sidebar"]) -> sidebarRTL |> respondTemplate []
-
         (Get, ["products"]) ->
             queryParams =
                 req.url
@@ -108,7 +101,7 @@ handleReq = \req ->
                         products,
                     },
                 },
-                navBar: navBarRTL { displaySideBar, displayDarkMode },
+                navBar: navBarRTL {},
             }
             |> respondTemplate []
 
@@ -117,7 +110,7 @@ handleReq = \req ->
 
 staticBaseUrl = "static"
 
-productsPage = \{products} -> Generated.Pages.productsPage {
+productsPage = \{ products } -> Generated.Pages.productsPage {
         products,
     }
 
@@ -159,17 +152,14 @@ baseWithBodyRTL = \{ header, content, navBar } -> Generated.Pages.baseWithBody {
         isWhiteBackground: Bool.true,
     }
 
-navBarRTL = \{ displaySideBar, displayDarkMode } -> Generated.Pages.navBarDashboard {
-        displaySideBar,
-        displayDarkMode,
+navBarRTL = \{} -> Generated.Pages.navBarDashboard {
         relURL: "",
         staticBaseUrl,
     }
 
-dashboardRTL = \{ displaySideBar, contentRTL } -> Generated.Pages.dashboard {
+dashboardRTL = \{ contentRTL } -> Generated.Pages.dashboard {
         contentRTL,
         footerDashboardRTL,
-        displaySideBar,
         sidebarRTL,
     }
 
