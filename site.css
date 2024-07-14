@@ -184,3 +184,9 @@
 #sidebar-content {
     height: 100%;
 }
+
+#user-profile-dropdown {
+    margin: 0;
+    position: absolute;
+    transform: translate3d(-160px, 135px, 0px);
+}

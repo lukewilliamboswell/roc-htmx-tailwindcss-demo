@@ -87,9 +87,11 @@
 
     function handleResize() {
         if (window.innerWidth >= 1024) {
-            document.getElementById('sidebar-content').classList.remove('hidden');
+            document
+                .getElementById("sidebar-content")
+                .classList.remove("hidden");
         } else {
-            document.getElementById('sidebar-content').classList.add('hidden');
+            document.getElementById("sidebar-content").classList.add("hidden");
         }
     }
 
@@ -102,6 +104,5 @@
         handleResize();
     });
 
-    window.addEventListener('resize', handleResize);
-
+    window.addEventListener("resize", handleResize);
 </script>

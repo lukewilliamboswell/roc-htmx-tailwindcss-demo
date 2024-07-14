@@ -16,7 +16,7 @@ import pf.Url
 import json.Json
 import ansi.Color
 import Generated.Pages
-import Helpers exposing [respondHtml, decodeFormValues, parseQueryParams]
+#import Helpers exposing [parseQueryParams]
 
 main : Request -> Task Response []
 main = \req -> Task.onErr (handleReq req) \err ->
@@ -74,29 +74,11 @@ handleReq = \req ->
         # ]
         (Get, ["dashboard", "sidebar"]) -> sidebarRTL |> respondTemplate []
         (Get, ["products"]) ->
-            queryParams =
-                req.url
-                |> parseQueryParams
-                |> Result.withDefault (Dict.empty {})
-
-            displaySideBar =
-                queryParams
-                |> Dict.get "sidebar"
-                |> Result.map \val -> if val == "true" then Bool.true else Bool.false
-                |> Result.withDefault Bool.false
-
-            displayDarkMode =
-                queryParams
-                |> Dict.get "dark"
-                |> Result.map \val -> if val == "true" then Bool.true else Bool.false
-                |> Result.withDefault Bool.false
-
             products = getProductsFromJSONFile!
 
             baseWithBodyRTL {
                 header: headerRTL,
                 content: dashboardRTL {
-                    displaySideBar,
                     contentRTL: productsPage {
                         products,
                     },
@@ -152,7 +134,7 @@ baseWithBodyRTL = \{ header, content, navBar } -> Generated.Pages.baseWithBody {
         isWhiteBackground: Bool.true,
     }
 
-navBarRTL = \{} -> Generated.Pages.navBarDashboard {
+navBarRTL = \{} -> Generated.Pages.navBar {
         relURL: "",
         staticBaseUrl,
     }
