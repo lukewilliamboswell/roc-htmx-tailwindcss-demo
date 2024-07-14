@@ -57,7 +57,8 @@
                                 <button
                                     hx-get="/products?partial=true"
                                     hx-target="main"
-                                    class="text-base w-full text-gray-900 rounded-lg flex items-center p-2 group hover:bg-gray-100 transition duration-75 pl-11 dark:text-gray-200 dark:hover:bg-gray-700"
+                                    hx-on:click="updateSidebar(this);"
+                                    class="sidebar-button-link text-base w-full text-gray-900 rounded-lg flex items-center p-2 group hover:bg-gray-100 transition duration-75 pl-11 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
                                     Products
                                 </button>
@@ -65,7 +66,8 @@
                             <li>
                                 <button
                                     href="#"
-                                    class="text-base w-full text-gray-900 rounded-lg flex items-center p-2 group hover:bg-gray-100 transition duration-75 pl-11 dark:text-gray-200 dark:hover:bg-gray-700"
+                                    hx-on:click="updateSidebar(this);"
+                                    class="sidebar-button-link text-base w-full text-gray-900 rounded-lg flex items-center p-2 group hover:bg-gray-100 transition duration-75 pl-11 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
                                     Users
                                 </button>
@@ -76,7 +78,8 @@
                         <button
                             hx-get="/settings?partial=true"
                             hx-target="main"
-                            class="flex items-center w-full p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700 {|if model.page == SettingsPage |} bg-gray-100 dark:bg-gray-700 {|endif|}"
+                            hx-on:click="updateSidebar(this);"
+                            class="sidebar-button-link flex items-center w-full p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700 {|if model.page == SettingsPage |} bg-gray-100 dark:bg-gray-700 {|endif|}"
                         >
                             <svg
                                 class="w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
@@ -137,32 +140,40 @@
                         </button>
                         <ul id="dropdown-pages" class="hidden py-2 space-y-2">
                             <li>
-                                <a
+                                <button
                                     href="#"
-                                    class="flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-                                    >Pricing</a
+                                    hx-on:click="updateSidebar(this);"
+                                    class="sidebar-button-link w-full flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
+                                    Pricing
+                                </button>
                             </li>
                             <li>
-                                <a
+                                <button
                                     href="#"
-                                    class="flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-                                    >Maintenance</a
+                                    hx-on:click="updateSidebar(this);"
+                                    class="sidebar-button-link w-full flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
+                                    Maintenance
+                                </button>
                             </li>
                             <li>
-                                <a
+                                <button
                                     href="#"
-                                    class="flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-                                    >404 not found</a
+                                    hx-on:click="updateSidebar(this);"
+                                    class="sidebar-button-link w-full flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
+                                    404 not found
+                                </button>
                             </li>
                             <li>
-                                <a
+                                <button
                                     href="#"
-                                    class="flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-                                    >500 server error</a
+                                    hx-on:click="updateSidebar(this);"
+                                    class="sidebar-button-link w-full flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
+                                    500 server error
+                                </button>
                             </li>
                         </ul>
                     </li>
@@ -207,39 +218,49 @@
                         </button>
                         <ul id="dropdown-auth" class="hidden py-2 space-y-2">
                             <li>
-                                <a
+                                <button
                                     href="#"
-                                    class="flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-                                    >Sign in</a
+                                    hx-on:click="updateSidebar(this);"
+                                    class="sidebar-button-link w-full flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
+                                    Sign in
+                                </button>
                             </li>
                             <li>
-                                <a
+                                <button
                                     href="#"
-                                    class="flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-                                    >Sign up</a
+                                    hx-on:click="updateSidebar(this);"
+                                    class="sidebar-button-link w-full flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
+                                    Sign up
+                                </button>
                             </li>
                             <li>
-                                <a
+                                <button
                                     href="#"
-                                    class="flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-                                    >Forgot password</a
+                                    hx-on:click="updateSidebar(this);"
+                                    class="sidebar-button-link w-full flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
+                                    Forgot password
+                                </button>
                             </li>
                             <li>
-                                <a
+                                <button
                                     href="#"
-                                    class="flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-                                    >Reset password</a
+                                    hx-on:click="updateSidebar(this);"
+                                    class="sidebar-button-link w-full flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
+                                    Reset password
+                                </button>
                             </li>
                             <li>
-                                <a
+                                <button
                                     href="#"
-                                    class="flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-                                    >Profile lock</a
+                                    hx-on:click="updateSidebar(this);"
+                                    class="sidebar-button-link w-full flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
+                                    Profile lock
+                                </button>
                             </li>
                         </ul>
                     </li>
@@ -527,3 +548,17 @@
     class="fixed inset-0 z-10 hidden bg-gray-900/50 dark:bg-gray-900/90"
     id="sidebarBackdrop"
 ></div>
+
+<script>
+    function updateSidebar(element) {
+        Array.from(
+            document.getElementsByClassName("sidebar-button-link"),
+        ).forEach((el) => {
+            el.classList.remove("bg-gray-100");
+            el.classList.remove("dark:bg-gray-700");
+        });
+
+        element.classList.add("bg-gray-100");
+        element.classList.add("dark:bg-gray-700");
+    }
+</script>
