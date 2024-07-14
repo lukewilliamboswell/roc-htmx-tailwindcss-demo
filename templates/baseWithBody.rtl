@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en" class="dark">
-  <head>
-    {{{ model.headerRTL }}}
-  </head>
+    <head>
+        {{{ model.headerRTL }}}
+    </head>
     {{{ model.navBarRTL }}}
     <body
         hx-boost="true"
         class="{|if model.isWhiteBackground |}bg-white dark:bg-gray-900{|else|}bg-gray-50 dark:bg-gray-800{|endif|}"
     >
-    {{{ model.contentRTL }}}
+        {{{ model.contentRTL }}}
     </body>
 </html>

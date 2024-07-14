@@ -1,64 +1,95 @@
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="{{ model.description }}">
-<meta name="author" content="{{ model.authors }}">
-<meta name="generator" content="rtl <https://github.com/isaacvando/rtl>">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="{{ model.description }}" />
+<meta name="author" content="{{ model.authors }}" />
+<meta name="generator" content="rtl <https://github.com/isaacvando/rtl>" />
 
 <title>{{ model.title }}</title>
 
-<link rel="canonical" href="#">
+<link rel="canonical" href="#" />
 
 {{{ model.stylesheetRTL }}}
 
-<link rel="apple-touch-icon" sizes="180x180" href="{{model.staticBaseUrl}}/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="{{model.staticBaseUrl}}/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="{{model.staticBaseUrl}}/favicon-16x16.png">
-<link rel="icon" type="image/png" href="{{model.staticBaseUrl}}/favicon.ico">
-<link rel="manifest" href="{{model.staticBaseUrl}}/site.webmanifest">
-<link rel="mask-icon" color="#5bbad5" href="{{model.staticBaseUrl}}/safari-pinned-tab.svg">
-<meta name="msapplication-TileColor" content="#ffffff">
-<meta name="theme-color" content="#ffffff">
+<link
+    rel="apple-touch-icon"
+    sizes="180x180"
+    href="{{model.staticBaseUrl}}/apple-touch-icon.png"
+/>
+<link
+    rel="icon"
+    type="image/png"
+    sizes="32x32"
+    href="{{model.staticBaseUrl}}/favicon-32x32.png"
+/>
+<link
+    rel="icon"
+    type="image/png"
+    sizes="16x16"
+    href="{{model.staticBaseUrl}}/favicon-16x16.png"
+/>
+<link rel="icon" type="image/png" href="{{model.staticBaseUrl}}/favicon.ico" />
+<link rel="manifest" href="{{model.staticBaseUrl}}/site.webmanifest" />
+<link
+    rel="mask-icon"
+    color="#5bbad5"
+    href="{{model.staticBaseUrl}}/safari-pinned-tab.svg"
+/>
+<meta name="msapplication-TileColor" content="#ffffff" />
+<meta name="theme-color" content="#ffffff" />
 
-<script src="{{model.staticBaseUrl}}/htmx_2_0_1.js" integrity="sha384-NbyVQfpXOYzADPrPp626Z4ql++mo8SwoWXIEmGQXiuFaEBha9iXax3JWYYzcpr+a"></script>
+<script
+    src="{{model.staticBaseUrl}}/htmx_2_0_1.js"
+    integrity="sha384-NbyVQfpXOYzADPrPp626Z4ql++mo8SwoWXIEmGQXiuFaEBha9iXax3JWYYzcpr+a"
+></script>
 
 <script>
-
     function makeDark() {
-      document.documentElement.classList.add('dark');
-      document.getElementById('theme-toggle-light-icon').classList.remove('hidden');
-      document.getElementById('theme-toggle-dark-icon').classList.add('hidden');
-    };
+        document.documentElement.classList.add("dark");
+        document
+            .getElementById("theme-toggle-light-icon")
+            .classList.remove("hidden");
+        document
+            .getElementById("theme-toggle-dark-icon")
+            .classList.add("hidden");
+    }
 
     function makeLight() {
-      document.documentElement.classList.remove('dark');
-      document.getElementById('theme-toggle-dark-icon').classList.remove('hidden');
-      document.getElementById('theme-toggle-light-icon').classList.add('hidden');
-    };
+        document.documentElement.classList.remove("dark");
+        document
+            .getElementById("theme-toggle-dark-icon")
+            .classList.remove("hidden");
+        document
+            .getElementById("theme-toggle-light-icon")
+            .classList.add("hidden");
+    }
 
     function toggleDarkMode() {
-      if (document.documentElement.classList.contains('dark')) {
-        makeLight();
-        localStorage.setItem('color-theme', 'light');
-      } else {
-        makeDark();
-        localStorage.setItem('color-theme', 'dark');
-      }
-    };
+        if (document.documentElement.classList.contains("dark")) {
+            makeLight();
+            localStorage.setItem("color-theme", "light");
+        } else {
+            makeDark();
+            localStorage.setItem("color-theme", "dark");
+        }
+    }
 
     function setDarkMode() {
-      if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        makeDark();
-      } else {
-        makeLight();
-      }
-    };
+        if (
+            localStorage.getItem("color-theme") === "dark" ||
+            (!("color-theme" in localStorage) &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches)
+        ) {
+            makeDark();
+        } else {
+            makeLight();
+        }
+    }
 
-    document.addEventListener('htmx:afterSettle', function(evt) {
+    document.addEventListener("htmx:afterSettle", function (evt) {
         setDarkMode();
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener("DOMContentLoaded", function () {
         setDarkMode();
     });
-
 </script>
