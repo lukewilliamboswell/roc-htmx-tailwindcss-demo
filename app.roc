@@ -59,8 +59,8 @@ handleReq = \req ->
                         Task.ok SettingsPage
                     else
                         Task.ok ProductsPage
-                        # TODO restore when we have a default page
-                        #Task.err (URLNotFound req.url)
+                    # TODO restore when we have a default page
+                    # Task.err (URLNotFound req.url)
                 )!
 
             newParams =
@@ -105,10 +105,7 @@ getProductsFromJSONFile =
 
     Task.ok products
 
-settingsPage = Generated.Pages.settingsPage {
-    staticBaseUrl,
-    pageName: "Settings",
-}
+settingsPage = Generated.Pages.settingsPage { staticBaseUrl }
 
 respondPageFull :
     {
