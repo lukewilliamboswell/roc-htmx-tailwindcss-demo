@@ -39,7 +39,7 @@ handleReq = \req ->
     when (req.method, urlSegments) is
         (Get, ["static", .. as rest]) -> getStaticFile (rest |> Str.joinWith "/" |> Str.withPrefix "./")
         (Get, ["favicon.ico"]) -> getStaticFile "./favicon.ico"
-        (Get, [""]) | (Get, ["products"]) | (Get, ["settings"]) ->
+        (Get, [""]) | (Get, ["products"]) | (Get, ["settings"]) | (Get, ["users"]) ->
             queryParams =
                 req.url
                 |> parseQueryParams
@@ -57,6 +57,8 @@ handleReq = \req ->
                         Task.ok ProductsPage
                     else if List.startsWith urlSegments ["settings"] then
                         Task.ok SettingsPage
+                    else if List.startsWith urlSegments ["users"] then
+                        Task.ok UsersPage
                     else
                         Task.ok ProductsPage
                     # TODO restore when we have a default page
@@ -92,7 +94,7 @@ Product : {
 getProductsFromJSONFile : Task (List Product) _
 getProductsFromJSONFile =
 
-    path = "./products.json"
+    path = "./sample-products.json"
 
     bytes =
         File.readBytes (Path.fromStr path)
@@ -105,14 +107,39 @@ getProductsFromJSONFile =
 
     Task.ok products
 
+User : {
+    id : U64,
+    name : Str,
+    avatar : Str,
+    email : Str,
+    biography : Str,
+    position : Str,
+    country : Str,
+    status : Str,
+}
+
+getUsersFromJSONFile : Task (List User) _
+getUsersFromJSONFile =
+    path = "./sample-users.json"
+
+    bytes =
+        File.readBytes (Path.fromStr path)
+            |> Task.mapErr! \err -> ErrReadingJSONFile path err
+
+    products =
+        Decode.fromBytes bytes Json.utf8
+            |> Task.fromResult
+            |> Task.mapErr! \err -> ErrDecodingJSONFile path err
+
+    Task.ok products
+
+usersPage = \{ users } -> Generated.Pages.usersPage {
+        staticBaseUrl,
+        users,
+    }
+
 settingsPage = Generated.Pages.settingsPage { staticBaseUrl }
 
-respondPageFull :
-    {
-        newUrl : Str,
-        page : [SettingsPage, ProductsPage],
-    }
-    -> Task Response _
 respondPageFull = \{ page, newUrl } ->
 
     full = \contentRTL ->
@@ -131,12 +158,10 @@ respondPageFull = \{ page, newUrl } ->
             products = getProductsFromJSONFile!
             full (productsPage { products })
 
-respondPagePartial :
-    {
-        newUrl : Str,
-        page : [SettingsPage, ProductsPage],
-    }
-    -> Task Response _
+        UsersPage ->
+            users = getUsersFromJSONFile!
+            full (usersPage { users })
+
 respondPagePartial = \{ page, newUrl } ->
     when page is
         SettingsPage ->
@@ -148,6 +173,13 @@ respondPagePartial = \{ page, newUrl } ->
         ProductsPage ->
             products = getProductsFromJSONFile!
             productsPage { products }
+            |> respondTemplate [
+                { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
+            ]
+
+        UsersPage ->
+            users = getUsersFromJSONFile!
+            usersPage { users }
             |> respondTemplate [
                 { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
             ]

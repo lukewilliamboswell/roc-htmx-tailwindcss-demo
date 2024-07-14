@@ -40,7 +40,8 @@
                     </li>
                     <li>
                         <button
-                            href="#"
+                            hx-get="/users?partial=true"
+                            hx-target="main"
                             hx-on:click="updateSidebar(this);"
                             class="sidebar-button-link text-base w-full text-gray-900 rounded-lg flex items-center p-2 group hover:bg-gray-100 transition duration-75 pl-1 dark:text-gray-200 dark:hover:bg-gray-700"
                         >
