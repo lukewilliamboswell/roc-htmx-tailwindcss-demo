@@ -22,11 +22,11 @@ respondRedirect = \next ->
         body: [],
     }
 
-respondHtml : Html.Node, List {name: Str, value : List U8} -> Task Response []_
+respondHtml : Html.Node, List { name : Str, value : List U8 } -> Task Response []_
 respondHtml = \node, otherHeaders ->
     Task.ok {
         status: 200,
-        headers:  [
+        headers: [
             { name: "Content-Type", value: Str.toUtf8 "text/html; charset=utf-8" },
         ]
         |> List.concat otherHeaders,
@@ -48,7 +48,7 @@ parseQueryParams = \url ->
 queryParamsToUrl : Dict Str Str -> Str
 queryParamsToUrl = \params ->
     Dict.toList params
-    |> List.map \(k,v) ->"$(k)=$(v)"
+    |> List.map \(k, v) -> "$(k)=$(v)"
     |> Str.joinWith "&"
 
 expect
@@ -58,7 +58,7 @@ expect
     ==
     Ok "port=8000&name=Luke"
 
-parsePagedParams : Dict Str Str -> Result {page: I64, items: I64} _
+parsePagedParams : Dict Str Str -> Result { page : I64, items : I64 } _
 parsePagedParams = \queryParams ->
 
     maybePage = queryParams |> Dict.get "page" |> Result.try Str.toI64
@@ -73,7 +73,7 @@ expect
     |> parseQueryParams
     |> Result.try parsePagedParams
     ==
-    Ok {page:22, items: 33}
+    Ok { page: 22, items: 33 }
 
 expect
     "/bigTask?page=0&count=33"
@@ -89,10 +89,14 @@ expect
     ==
     Err (InvalidQuery "[\"/bigTask\"]")
 
-replaceQueryParams : {url: Str, params: Dict Str Str} -> Str
-replaceQueryParams = \{url, params} ->
+replaceQueryParams : { url : Str, params : Dict Str Str } -> Str
+replaceQueryParams = \{ url, params } ->
     when Str.splitFirst url "?" is
-        Ok {before} if Dict.isEmpty params ->  "$(before)"
+        Ok { before } if Dict.isEmpty params -> "$(before)"
         Err NotFound if Dict.isEmpty params -> "$(url)"
-        Ok {before} ->  "$(before)?$(queryParamsToUrl params)"
+        Ok { before } -> "$(before)?$(queryParamsToUrl params)"
         Err NotFound -> "$(url)?$(queryParamsToUrl params)"
+
+expect replaceQueryParams { url: "/bigTask", params: Dict.empty {} } == "/bigTask"
+expect replaceQueryParams { url: "/bigTask?items=33", params: Dict.empty {} } == "/bigTask"
+expect replaceQueryParams { url: "/bigTask?items=33", params: Dict.fromList [("page", "22")] } == "/bigTask?page=22"
