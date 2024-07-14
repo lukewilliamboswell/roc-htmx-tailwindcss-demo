@@ -71,7 +71,6 @@ handleReq = \req ->
 
             if partial then respondPagePartial { newUrl, page } else respondPageFull { newUrl, page }
 
-        (Get, ["asdf"]) -> headerRTL |> respondTemplate []
         _ -> Task.err (URLNotFound req.url)
 
 staticBaseUrl = "static"
