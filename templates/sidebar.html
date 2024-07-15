@@ -149,20 +149,19 @@
                             </li>
                             <li>
                                 <button
-                                    href="#"
-                                    hx-on:click="updateSidebar(this);"
+                                    hx-on:click="window.location.href = '/test404'"
                                     class="sidebar-button-link w-full flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
-                                    404 not found
+                                    404 Not Found
                                 </button>
                             </li>
                             <li>
                                 <button
-                                    href="#"
+                                    hx-on:click="window.location.href = '/test500'"
                                     hx-on:click="updateSidebar(this);"
                                     class="sidebar-button-link w-full flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
-                                    500 server error
+                                    500 Server Error
                                 </button>
                             </li>
                         </ul>

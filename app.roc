@@ -96,7 +96,8 @@ handleReq = \req ->
 
             if partial then respondPagePartial { newUrl, page } else respondPageFull { newUrl, page }
 
-        (Get, ["test505"]) -> Task.err Test505Error
+        (Get, ["test404"]) -> Task.err (URLNotFound "Test404Error")
+        (Get, ["test500"]) -> Task.err Test500Error
         _ -> Task.err (URLNotFound req.url)
 
 staticBaseUrl = "static"
