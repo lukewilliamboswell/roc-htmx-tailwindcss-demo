@@ -25,14 +25,27 @@ main = \req -> Task.onErr (handleReq req) \err ->
                 errMsg = Str.joinWith ["404 NotFound" |> Color.fg Yellow, url] " "
                 Stderr.line! errMsg
 
-                baseWithBodyRTL {
-                    header: headerRTL,
+                Generated.Pages.layout {
+                    header: headerTemplate,
                     content: Generated.Pages.error404 { staticBaseUrl },
-                    navBar: "",
+                    footer: "",
+                    navbar: "",
+                    sidebar: "",
                 }
-                |> respondTemplate []
+                |> respondTemplate 404 []
 
-            _ -> respondCodeLogError (Str.joinWith ["SERVER ERROR" |> Color.fg Red, Inspect.toStr err] " ") 500
+            _ ->
+                errMsg = Str.joinWith ["500 Server Error" |> Color.fg Red, Inspect.toStr err] " "
+                Stderr.line! errMsg
+
+                Generated.Pages.layout {
+                    header: headerTemplate,
+                    content: Generated.Pages.error500 { staticBaseUrl },
+                    footer: "",
+                    navbar: "",
+                    sidebar: "",
+                }
+                |> respondTemplate 500 []
 
 handleReq : Request -> Task Response _
 handleReq = \req ->
@@ -83,12 +96,34 @@ handleReq = \req ->
 
             if partial then respondPagePartial { newUrl, page } else respondPageFull { newUrl, page }
 
+        (Get, ["test505"]) -> Task.err Test505Error
         _ -> Task.err (URLNotFound req.url)
 
 staticBaseUrl = "static"
 
-productsPage = \{ products } -> Generated.Pages.productsPage {
-        products,
+headerTemplate : Str
+headerTemplate = Generated.Pages.header {
+    staticBaseUrl,
+    authors: "Themesberg",
+    description: "Get started with a free and open-source admin dashboard layout built with Tailwind CSS and Flowbite featuring charts, widgets, CRUD layouts, authentication pages, and more",
+    stylesheet: Generated.Pages.stylesheet { staticBaseUrl },
+    title: "Tailwind CSS Admin Dashboard - Flowbite",
+}
+
+footerTemplate : Str
+footerTemplate = Generated.Pages.footer {
+    copyright: "Flowbite Authors",
+}
+
+navbarTemplate : Str
+navbarTemplate = Generated.Pages.navbar {
+    relURL: "",
+    staticBaseUrl,
+}
+
+sidebarTemplate : Str
+sidebarTemplate = Generated.Pages.sidebar {
+    ariaLabel: "Sidebar",
     }
 
 Product : {
@@ -143,92 +178,70 @@ getUsersFromJSONFile =
 
     Task.ok products
 
-usersPage = \{ users } -> Generated.Pages.usersPage {
-        staticBaseUrl,
-        users,
-    }
-
-settingsPage = Generated.Pages.settingsPage { staticBaseUrl }
-
+respondPageFull : _ -> Task Response _
 respondPageFull = \{ page, newUrl } ->
 
-    full = \contentRTL ->
-        baseWithBodyRTL {
-            header: headerRTL,
-            content: dashboardRTL { contentRTL },
-            navBar: navBarRTL {},
+    full = \content ->
+        Generated.Pages.layout {
+            header: headerTemplate,
+            content,
+            footer: footerTemplate,
+            navbar: navbarTemplate,
+            sidebar: sidebarTemplate,
         }
-        |> respondTemplate [
+        |> respondTemplate 200 [
             { name: "HX-Push-Url", value: newUrl },
         ]
 
     when page is
-        SettingsPage -> full settingsPage
+        SettingsPage -> full (Generated.Pages.pageSettings { staticBaseUrl })
         ProductsPage ->
             products = getProductsFromJSONFile!
-            full (productsPage { products })
+            full
+                (
+                    Generated.Pages.pageProducts {
+                        products,
+                    }
+                )
 
         UsersPage ->
             users = getUsersFromJSONFile!
-            full (usersPage { users })
+            full
+                (
+                    Generated.Pages.pageUsers {
+                        staticBaseUrl,
+                        users,
+                    }
+                )
 
+respondPagePartial : _ -> Task Response _
 respondPagePartial = \{ page, newUrl } ->
     when page is
         SettingsPage ->
-            settingsPage
-            |> respondTemplate [
+            Generated.Pages.pageSettings { staticBaseUrl }
+            |> respondTemplate 200 [
                 { name: "HX-Push-Url", value: newUrl },
             ]
 
         ProductsPage ->
             products = getProductsFromJSONFile!
-            productsPage { products }
-            |> respondTemplate [
+
+            Generated.Pages.pageProducts {
+                products,
+            }
+            |> respondTemplate 200 [
                 { name: "HX-Push-Url", value: newUrl },
             ]
 
         UsersPage ->
             users = getUsersFromJSONFile!
-            usersPage { users }
-            |> respondTemplate [
+            Generated.Pages.pageUsers {
+                staticBaseUrl,
+                users,
+            }
+            |> respondTemplate 200 [
                 { name: "HX-Push-Url", value: newUrl },
             ]
-
-baseWithBodyRTL = \{ header, content, navBar } -> Generated.Pages.baseWithBody {
-        contentRTL: content,
-        navBarRTL: navBar,
-        headerRTL: header,
-        isWhiteBackground: Bool.true,
-    }
-
-navBarRTL = \{} -> Generated.Pages.navBar {
-        relURL: "",
-        staticBaseUrl,
-    }
-
-dashboardRTL = \{ contentRTL } -> Generated.Pages.dashboard {
-        contentRTL,
-        footerDashboardRTL,
-        sidebarRTL,
-    }
-
-footerDashboardRTL = Generated.Pages.footerDashboard {
-    copyright: "Flowbite Authors",
-}
-
-sidebarRTL = Generated.Pages.sidebar {
-    page: SettingsPage,
-    relURL: "/",
-}
-
-headerRTL =
-    Generated.Pages.header {
-        authors: "Themesberg",
-        description: "Get started with a free and open-source admin dashboard layout built with Tailwind CSS and Flowbite featuring charts, widgets, CRUD layouts, authentication pages, and more",
-        staticBaseUrl,
-        stylesheetRTL: Generated.Pages.stylesheet { staticBaseUrl },
-        title: "Tailwind CSS Admin Dashboard - Flowbite",
-    }
 
 getStaticFile : Str -> Task Response _
 getStaticFile = \path ->
@@ -270,23 +283,14 @@ getStaticFile = \path ->
         body,
     }
 
-respondTemplate : Str, _ -> Task Response []_
-respondTemplate = \html, headers ->
+respondTemplate : Str, U16, _ -> Task Response []_
+respondTemplate = \html, status, headers ->
     Task.ok {
-        status: 200,
+        status,
         headers: List.concat headers [
             { name: "Content-Type", value: "text/html; charset=utf-8" },
         ],
         body: html |> Str.toUtf8,
-    }
-
-respondCodeLogError : Str, U16 -> Task Response []
-respondCodeLogError = \msg, code ->
-    Stderr.line! msg
-    Task.ok! {
-        status: code,
-        headers: [],
-        body: [],
     }
 
 logRequest : Request -> Task {} *

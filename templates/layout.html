@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en" class="dark">
+    <head>
+        {{{ model.header }}}
+    </head>
+    {{{ model.navbar }}}
+    <body hx-boost="true" class="bg-gray-50 dark:bg-gray-800">
+        <div class="flex pt-16 overflow-hidden bg-gray-50 dark:bg-gray-900">
+            {{{ model.sidebar }}}
+            <div
+                id="main-content"
+                class="relative w-full h-full overflow-y-auto bg-gray-50 lg:ml-64 dark:bg-gray-900"
+            >
+                {{{ model.content }}} {{{ model.footer }}}
+            </div>
+        </div>
+    </body>
+</html>
