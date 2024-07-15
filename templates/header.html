@@ -47,20 +47,20 @@
         document.documentElement.classList.add("dark");
         document
             .getElementById("theme-toggle-light-icon")
-            .classList.remove("hidden");
+            ?.classList.remove("hidden");
         document
             .getElementById("theme-toggle-dark-icon")
-            .classList.add("hidden");
+            ?.classList.add("hidden");
     }
 
     function makeLight() {
         document.documentElement.classList.remove("dark");
         document
             .getElementById("theme-toggle-dark-icon")
-            .classList.remove("hidden");
+            ?.classList.remove("hidden");
         document
             .getElementById("theme-toggle-light-icon")
-            .classList.add("hidden");
+            ?.classList.add("hidden");
     }
 
     function toggleDarkMode() {
@@ -89,9 +89,9 @@
         if (window.innerWidth >= 1024) {
             document
                 .getElementById("sidebar-content")
-                .classList.remove("hidden");
+                ?.classList.remove("hidden");
         } else {
-            document.getElementById("sidebar-content").classList.add("hidden");
+            document.getElementById("sidebar-content")?.classList.add("hidden");
         }
     }
 
