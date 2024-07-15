@@ -21,7 +21,17 @@ import Helpers exposing [parseQueryParams]
 main : Request -> Task Response []
 main = \req -> Task.onErr (handleReq req) \err ->
         when err is
-            URLNotFound url -> respondCodeLogError (Str.joinWith ["404 NotFound" |> Color.fg Red, url] " ") 404
+            URLNotFound url ->
+                errMsg = Str.joinWith ["404 NotFound" |> Color.fg Yellow, url] " "
+                Stderr.line! errMsg
+
+                baseWithBodyRTL {
+                    header: headerRTL,
+                    content: Generated.Pages.error404 { staticBaseUrl },
+                    navBar: "",
+                }
+                |> respondTemplate []
+
             _ -> respondCodeLogError (Str.joinWith ["SERVER ERROR" |> Color.fg Red, Inspect.toStr err] " ") 500
 
 handleReq : Request -> Task Response _
@@ -149,7 +159,7 @@ respondPageFull = \{ page, newUrl } ->
             navBar: navBarRTL {},
         }
         |> respondTemplate [
-            { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
+            { name: "HX-Push-Url", value: newUrl },
         ]
 
     when page is
@@ -167,21 +177,21 @@ respondPagePartial = \{ page, newUrl } ->
         SettingsPage ->
             settingsPage
             |> respondTemplate [
-                { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
+                { name: "HX-Push-Url", value: newUrl },
             ]
 
         ProductsPage ->
             products = getProductsFromJSONFile!
             productsPage { products }
             |> respondTemplate [
-                { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
+                { name: "HX-Push-Url", value: newUrl },
             ]
 
         UsersPage ->
             users = getUsersFromJSONFile!
             usersPage { users }
             |> respondTemplate [
-                { name: "HX-Push-Url", value: Str.toUtf8 newUrl },
+                { name: "HX-Push-Url", value: newUrl },
             ]
 
 baseWithBodyRTL = \{ header, content, navBar } -> Generated.Pages.baseWithBody {
@@ -233,28 +243,28 @@ getStaticFile = \path ->
 
     contentTypeHeader =
         if Str.endsWith path ".svg" then
-            { name: "Content-Type", value: Str.toUtf8 "image/svg+xml" }
+            { name: "Content-Type", value: "image/svg+xml" }
         else if Str.endsWith path ".css" then
-            { name: "Content-Type", value: Str.toUtf8 "text/css" }
+            { name: "Content-Type", value: "text/css" }
         else if Str.endsWith path ".js" then
-            { name: "Content-Type", value: Str.toUtf8 "application/javascript" }
+            { name: "Content-Type", value: "application/javascript" }
         else if Str.endsWith path ".ico" then
-            { name: "Content-Type", value: Str.toUtf8 "image/x-icon" }
+            { name: "Content-Type", value: "image/x-icon" }
         else if Str.endsWith path ".png" then
-            { name: "Content-Type", value: Str.toUtf8 "image/png" }
+            { name: "Content-Type", value: "image/png" }
         else if Str.endsWith path ".jpg" then
-            { name: "Content-Type", value: Str.toUtf8 "image/jpeg" }
+            { name: "Content-Type", value: "image/jpeg" }
         else if Str.endsWith path ".jpeg" then
-            { name: "Content-Type", value: Str.toUtf8 "image/jpeg" }
+            { name: "Content-Type", value: "image/jpeg" }
         else if Str.endsWith path ".gif" then
-            { name: "Content-Type", value: Str.toUtf8 "image/gif" }
+            { name: "Content-Type", value: "image/gif" }
         else
-            { name: "Content-Type", value: Str.toUtf8 "application/octet-stream" }
+            { name: "Content-Type", value: "application/octet-stream" }
 
     Task.ok {
         status: 200,
         headers: [
-            { name: "Cache-Control", value: Str.toUtf8 "max-age=3600" },
+            { name: "Cache-Control", value: "max-age=3600" },
             contentTypeHeader,
         ],
         body,
@@ -265,7 +275,7 @@ respondTemplate = \html, headers ->
     Task.ok {
         status: 200,
         headers: List.concat headers [
-            { name: "Content-Type", value: Str.toUtf8 "text/html; charset=utf-8" },
+            { name: "Content-Type", value: "text/html; charset=utf-8" },
         ],
         body: html |> Str.toUtf8,
     }

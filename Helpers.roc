@@ -1,9 +1,12 @@
 module [
     respondRedirect,
     respondHtml,
+
     decodeFormValues,
+
     parseQueryParams,
-    queryParamsToUrl,
+    queryParamsToStr,
+
     parsePagedParams,
     replaceQueryParams,
 ]
@@ -17,17 +20,17 @@ respondRedirect = \next ->
     Task.ok {
         status: 303,
         headers: [
-            { name: "Location", value: Str.toUtf8 next },
+            { name: "Location", value: next },
         ],
         body: [],
     }
 
-respondHtml : Html.Node, List { name : Str, value : List U8 } -> Task Response []_
+respondHtml : Html.Node, List { name : Str, value : Str } -> Task Response []_
 respondHtml = \node, otherHeaders ->
     Task.ok {
         status: 200,
         headers: [
-            { name: "Content-Type", value: Str.toUtf8 "text/html; charset=utf-8" },
+            { name: "Content-Type", value: "text/html; charset=utf-8" },
         ]
         |> List.concat otherHeaders,
         body: Str.toUtf8 (Html.render node),
@@ -45,8 +48,8 @@ parseQueryParams = \url ->
         [_, queryPart] -> queryPart |> Str.toUtf8 |> Http.parseFormUrlEncoded
         parts -> Err (InvalidQuery (Inspect.toStr parts))
 
-queryParamsToUrl : Dict Str Str -> Str
-queryParamsToUrl = \params ->
+queryParamsToStr : Dict Str Str -> Str
+queryParamsToStr = \params ->
     Dict.toList params
     |> List.map \(k, v) -> "$(k)=$(v)"
     |> Str.joinWith "&"
@@ -54,7 +57,7 @@ queryParamsToUrl = \params ->
 expect
     "localhost:8000?port=8000&name=Luke"
     |> parseQueryParams
-    |> Result.map queryParamsToUrl
+    |> Result.map queryParamsToStr
     ==
     Ok "port=8000&name=Luke"
 
@@ -94,8 +97,8 @@ replaceQueryParams = \{ url, params } ->
     when Str.splitFirst url "?" is
         Ok { before } if Dict.isEmpty params -> "$(before)"
         Err NotFound if Dict.isEmpty params -> "$(url)"
-        Ok { before } -> "$(before)?$(queryParamsToUrl params)"
-        Err NotFound -> "$(url)?$(queryParamsToUrl params)"
+        Ok { before } -> "$(before)?$(queryParamsToStr params)"
+        Err NotFound -> "$(url)?$(queryParamsToStr params)"
 
 expect replaceQueryParams { url: "/bigTask", params: Dict.empty {} } == "/bigTask"
 expect replaceQueryParams { url: "/bigTask?items=33", params: Dict.empty {} } == "/bigTask"
