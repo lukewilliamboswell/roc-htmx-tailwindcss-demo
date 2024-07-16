@@ -66,6 +66,13 @@ handleReq = \req ->
             |> layoutNormal
             |> respondTemplate 200 []
 
+        (Get, ["forgotpassword"]) ->
+            Generated.Pages.pageForgotPassword {
+                staticBaseUrl,
+            }
+            |> layoutNormal
+            |> respondTemplate 200 []
+
         (Get, [""]) | (Get, ["products"]) | (Get, ["settings"]) | (Get, ["users"]) ->
             queryParams =
                 req.url
@@ -135,7 +142,7 @@ layoutNormal = \content ->
     Generated.Pages.layoutNormal {
         header: headerTemplate,
         content: content,
-        footer: footerTemplate,
+        footer: "",
         navbar: "",
     }
 

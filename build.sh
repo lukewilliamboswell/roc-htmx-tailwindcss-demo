@@ -14,7 +14,8 @@ cd ./Generated && $ROC check Pages.roc && cd ..
 
 # build app
 rm -rf app
-$ROC build --optimize app.roc || true
+# $ROC build --optimize app.roc || true
+$ROC build app.roc || true
 (ls app >> /dev/null 2>&1 && exit)
 
 # build css
