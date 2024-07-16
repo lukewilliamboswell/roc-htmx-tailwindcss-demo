@@ -1,5 +1,5 @@
 app [main] {
-    pf: platform "https://github.com/roc-lang/basic-webserver/releases/download/0.5.0/Vq-iXfrRf-aHxhJpAh71uoVUlC-rsWvmjzTYOJKhu4M.tar.br",
+    pf: platform "../basic-webserver/platform/main.roc",
     html: "https://github.com/Hasnep/roc-html/releases/download/v0.6.0/IOyNfA4U_bCVBihrs95US9Tf5PGAWh3qvrBN4DRbK5c.tar.br",
     ansi: "https://github.com/lukewilliamboswell/roc-ansi/releases/download/0.1.1/cPHdNPNh8bjOrlOgfSaGBJDz6VleQwsPdW0LJK6dbGQ.tar.br",
     json: "https://github.com/lukewilliamboswell/roc-json/releases/download/0.10.0/KbIfTNbxShRX1A1FgXei1SpO5Jn8sgP6HP6PXbi-xyA.tar.br",
@@ -25,26 +25,16 @@ main = \req -> Task.onErr (handleReq req) \err ->
                 errMsg = Str.joinWith ["404 NotFound" |> Color.fg Yellow, url] " "
                 Stderr.line! errMsg
 
-                Generated.Pages.layout {
-                    header: headerTemplate,
-                    content: Generated.Pages.error404 { staticBaseUrl },
-                    footer: "",
-                    navbar: "",
-                    sidebar: "",
-                }
+                Generated.Pages.error404 { staticBaseUrl }
+                |> layoutNormal
                 |> respondTemplate 404 []
 
             _ ->
                 errMsg = Str.joinWith ["500 Server Error" |> Color.fg Red, Inspect.toStr err] " "
                 Stderr.line! errMsg
 
-                Generated.Pages.layout {
-                    header: headerTemplate,
-                    content: Generated.Pages.error500 { staticBaseUrl },
-                    footer: "",
-                    navbar: "",
-                    sidebar: "",
-                }
+                Generated.Pages.error500 { staticBaseUrl }
+                |> layoutNormal
                 |> respondTemplate 500 []
 
 handleReq : Request -> Task Response _
@@ -62,6 +52,13 @@ handleReq = \req ->
     when (req.method, urlSegments) is
         (Get, ["static", .. as rest]) -> getStaticFile (rest |> Str.joinWith "/" |> Str.withPrefix "./")
         (Get, ["favicon.ico"]) -> getStaticFile "./favicon.ico"
+        (Get, ["signin"]) ->
+            Generated.Pages.pageSignIn {
+                staticBaseUrl,
+            }
+            |> layoutNormal
+            |> respondTemplate 200 []
+
         (Get, [""]) | (Get, ["products"]) | (Get, ["settings"]) | (Get, ["users"]) ->
             queryParams =
                 req.url
@@ -125,6 +122,23 @@ navbarTemplate = Generated.Pages.navbar {
 sidebarTemplate : Str
 sidebarTemplate = Generated.Pages.sidebar {
     ariaLabel: "Sidebar",
+}
+
+layoutNormal = \content ->
+    Generated.Pages.layoutNormal {
+        header: headerTemplate,
+        content: content,
+        footer: footerTemplate,
+        navbar: "",
+    }
+
+layoutSidebar = \content ->
+    Generated.Pages.layoutSidebar {
+        header: headerTemplate,
+        content,
+        footer: footerTemplate,
+        navbar: navbarTemplate,
+        sidebar: sidebarTemplate,
     }
 
 Product : {
@@ -181,39 +195,36 @@ getUsersFromJSONFile =
 
 respondPageFull : _ -> Task Response _
 respondPageFull = \{ page, newUrl } ->
-
-    full = \content ->
-        Generated.Pages.layout {
-            header: headerTemplate,
-            content,
-            footer: footerTemplate,
-            navbar: navbarTemplate,
-            sidebar: sidebarTemplate,
-        }
-        |> respondTemplate 200 [
-            { name: "HX-Push-Url", value: newUrl },
-        ]
-
     when page is
-        SettingsPage -> full (Generated.Pages.pageSettings { staticBaseUrl })
+        SettingsPage ->
+            Generated.Pages.pageSettings { staticBaseUrl }
+            |> layoutSidebar
+            |> respondTemplate 200 [
+                { name: "HX-Push-Url", value: newUrl },
+            ]
+
         ProductsPage ->
             products = getProductsFromJSONFile!
-            full
-                (
-                    Generated.Pages.pageProducts {
-                        products,
-                    }
-                )
+
+            Generated.Pages.pageProducts {
+                products,
+            }
+            |> layoutSidebar
+            |> respondTemplate 200 [
+                { name: "HX-Push-Url", value: newUrl },
+            ]
 
         UsersPage ->
             users = getUsersFromJSONFile!
-            full
-                (
-                    Generated.Pages.pageUsers {
-                        staticBaseUrl,
-                        users,
-                    }
-                )
+
+            Generated.Pages.pageUsers {
+                staticBaseUrl,
+                users,
+            }
+            |> layoutSidebar
+            |> respondTemplate 200 [
+                { name: "HX-Push-Url", value: newUrl },
+            ]
 
 respondPagePartial : _ -> Task Response _
 respondPagePartial = \{ page, newUrl } ->
