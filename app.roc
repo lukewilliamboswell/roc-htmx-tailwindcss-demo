@@ -59,6 +59,13 @@ handleReq = \req ->
             |> layoutNormal
             |> respondTemplate 200 []
 
+        (Get, ["signup"]) ->
+            Generated.Pages.pageSignUp {
+                staticBaseUrl,
+            }
+            |> layoutNormal
+            |> respondTemplate 200 []
+
         (Get, [""]) | (Get, ["products"]) | (Get, ["settings"]) | (Get, ["users"]) ->
             queryParams =
                 req.url
