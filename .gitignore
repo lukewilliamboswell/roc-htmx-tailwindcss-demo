@@ -2,6 +2,7 @@ src/Views/Pages.roc
 
 app
 www/app.css
+app.db
 
 .DS_Store
 
