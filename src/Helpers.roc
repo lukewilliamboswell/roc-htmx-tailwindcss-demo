@@ -1,18 +1,13 @@
 module [
     respondRedirect,
     respondHtml,
-
     decodeFormValues,
-
     parseQueryParams,
     queryParamsToStr,
-
     parsePagedParams,
     replaceQueryParams,
-
     respondTemplate,
     decodeMultiPartFormBoundary,
-
     info,
 ]
 
@@ -110,7 +105,6 @@ expect replaceQueryParams { url: "/bigTask", params: Dict.empty {} } == "/bigTas
 expect replaceQueryParams { url: "/bigTask?items=33", params: Dict.empty {} } == "/bigTask"
 expect replaceQueryParams { url: "/bigTask?items=33", params: Dict.fromList [("page", "22")] } == "/bigTask?page=22"
 
-
 respondTemplate : Str, U16, _ -> Task Response []_
 respondTemplate = \html, status, headers ->
     Task.ok {
@@ -121,17 +115,16 @@ respondTemplate = \html, status, headers ->
         body: html |> Str.toUtf8,
     }
 
-decodeMultiPartFormBoundary : List {name: Str, value: Str} -> Result (List U8) _
+decodeMultiPartFormBoundary : List { name : Str, value : Str } -> Result (List U8) _
 decodeMultiPartFormBoundary = \headers ->
     headers
-    |> List.keepIf \{name} -> name == "Content-Type" || name == "content-type"
+    |> List.keepIf \{ name } -> name == "Content-Type" || name == "content-type"
     |> List.first
     |> Result.mapErr \_ -> ExpectedContentTypeHeader headers
     |> Result.try \{ value } ->
         when Str.splitLast value "=" is
-            Ok {after} -> Ok (Str.toUtf8 after)
+            Ok { after } -> Ok (Str.toUtf8 after)
             Err err -> Err (InvalidContentTypeHeader err value)
-
 
 info : Str -> Task {} _
 info = \msg ->

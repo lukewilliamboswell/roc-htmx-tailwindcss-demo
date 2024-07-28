@@ -11,6 +11,4 @@ Product : {
 }
 
 sampleData : List Product
-sampleData =
-    [
-        ]
+sampleData = []

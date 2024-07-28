@@ -80,9 +80,9 @@ handleReq = \req ->
         |> List.dropFirst 1
 
     queryParams =
-            req.url
-            |> parseQueryParams
-            |> Result.withDefault (Dict.empty {})
+        req.url
+        |> parseQueryParams
+        |> Result.withDefault (Dict.empty {})
 
     partial =
         queryParams
@@ -98,7 +98,6 @@ handleReq = \req ->
         (Get, ["favicon.ico"]) -> getStaticFile "./favicon.ico"
         (Get, ["android-chrome-192x192.png"]) -> getStaticFile "./android-chrome-192x192.png"
         (Get, ["android-chrome-512x512.png"]) -> getStaticFile "./android-chrome-512x512.png"
-
         (Get, ["signin"]) ->
             Views.Pages.pageSignIn {
                 staticBaseUrl,
@@ -134,7 +133,7 @@ handleReq = \req ->
             |> Views.Layout.normal
             |> respondTemplate 200 []
 
-        (Get, [""]) | (_, ["products",..]) ->
+        (Get, [""]) | (_, ["products", ..]) ->
             Controllers.Product.handleRoutes {
                 req,
                 urlSegments: List.dropFirst urlSegments 1,
@@ -142,7 +141,7 @@ handleReq = \req ->
                 getSession,
             }
 
-        (_, ["users",..]) ->
+        (_, ["users", ..]) ->
             Controllers.User.handleRoutes {
                 req,
                 urlSegments: List.dropFirst urlSegments 1,
@@ -150,8 +149,7 @@ handleReq = \req ->
                 getSession,
             }
 
-        (_, ["settings",..]) ->
-
+        (_, ["settings", ..]) ->
             view = Views.Pages.pageSettings { staticBaseUrl }
 
             if partial then
@@ -216,7 +214,7 @@ logRequest = \req ->
     method = Http.methodToStr req.method
     url = req.url
     # body can be large, don't log it
-    #body = req.body |> Str.fromUtf8 |> Result.withDefault "<invalid utf8 body>"
+    # body = req.body |> Str.fromUtf8 |> Result.withDefault "<invalid utf8 body>"
     Stdout.line! "$(date) $(method) $(url)"
 
 getSession : Request, Str -> Task Session _

@@ -38,8 +38,7 @@ handleRoutes = \{ req, urlSegments, dbPath, getSession } ->
 
     when (req.method, urlSegments) is
         (Get, []) ->
-
-            users = Sql.User.list! {dbPath}
+            users = Sql.User.list! { dbPath }
 
             view = Views.Pages.pageUsers {
                 staticBaseUrl,

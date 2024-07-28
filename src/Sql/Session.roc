@@ -63,6 +63,7 @@ get = \sessionId, path ->
 
     when rows is
         [] -> Task.err SessionNotFound
-        [[Integer id, String _username], ..]->
+        [[Integer id, String _username], ..] ->
             Task.ok { id, user: LoggedIn "Demo User" }
+
         _ -> Task.err (UnexpectedValues "unexpected values in get Session, got $(Inspect.toStr rows)")

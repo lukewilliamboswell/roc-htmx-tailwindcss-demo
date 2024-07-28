@@ -18,10 +18,10 @@ headerTemplate = Views.Pages.header {
 }
 
 # TODO restore the footer
-#footerTemplate : Str
-#footerTemplate = Views.Pages.footer {
+# footerTemplate : Str
+# footerTemplate = Views.Pages.footer {
 #    copyright: "",
-#}
+# }
 
 navbarTemplate : Str
 navbarTemplate = Views.Pages.navbar {

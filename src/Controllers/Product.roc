@@ -35,8 +35,7 @@ handleRoutes = \{ req, urlSegments, dbPath, getSession } ->
 
     when (req.method, urlSegments) is
         (Get, []) ->
-
-            products = Sql.Product.list! {dbPath}
+            products = Sql.Product.list! { dbPath }
 
             view = Views.Pages.pageProducts {
                 products,
