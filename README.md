@@ -14,6 +14,5 @@ To use the build script `bash build.sh`, you will need the following in your `PA
 1. [roc](https://www.roc-lang.org/install)
 2. [rtl](https://github.com/isaacvando/rtl)
 3. [tailwindcss](https://tailwindcss.com/docs/installation)
-4. [simple-http-server](https://crates.io/crates/simple-http-server)
 
 Alternatively, run the steps manually and make use of the `--watch` cli commands for a nicer development experience.

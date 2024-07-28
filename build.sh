@@ -28,4 +28,4 @@ rm -rf app.db && sqlite3 app.db < app.sql
 # note we do this in a subshell so we can kill both the roc and simple-http-server processes
 # with a single ctrl-c, it just makes life easier
 cd www
-(trap 'kill 0' SIGINT; ../src/app & simple-http-server --port 8001 --cors)
+../src/app
