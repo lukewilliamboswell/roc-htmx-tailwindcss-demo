@@ -6,29 +6,61 @@ module [
 
 import pf.Task exposing [Task]
 import pf.Http exposing [Request]
-import pf.SQLite3
+import pf.Sqlite
 import Models.Session exposing [Session]
 
 new : Str -> Task I64 _
 new = \path ->
 
-    query =
-        "INSERT INTO sessions (session_id) VALUES (abs(random()));"
+    Sqlite.execute! {
+        path,
+        query: "INSERT INTO sessions (session_id) VALUES (abs(random()));",
+        bindings: [],
+    }
 
-    _ <-
-        SQLite3.execute { path, query, bindings: [] }
-        |> Task.mapErr \err -> SqlError err
-        |> Task.await
+    ids =
+        Sqlite.query!
+            {
+                path,
+                query: "SELECT last_insert_rowid();",
+                bindings: [],
+            }
+            (Sqlite.i64 "id")
 
-    rows =
-        { path, query: "SELECT last_insert_rowid();", bindings: [] }
-            |> SQLite3.execute
-            |> Task.onErr! \err -> SqlError err |> Task.err
+    when List.first ids is
+        Ok id -> Task.ok id
+        Err _ -> Task.err MoreThanOneInserted
 
-    when rows is
-        [] -> Task.err (UnexpectedValues "unexpected values in new Session, got NIL rows")
-        [[Integer id], ..] -> Task.ok id
-        _ -> Task.err (UnexpectedValues "unexpected values in new Session, got $(Inspect.toStr rows)")
+get : I64, Str -> Task Session _
+get = \sessionId, path ->
+
+    notFoundStr = "NOT_FOUND"
+
+    Sqlite.query
+        {
+            path,
+            query:
+            """
+            SELECT
+                sessions.session_id,
+                COALESCE(users.name,'$(notFoundStr)') AS 'username'
+            FROM sessions
+            LEFT OUTER JOIN users
+            ON sessions.user_id = users.id
+            WHERE sessions.session_id = :sessionId;
+            """,
+            bindings: [{ name: ":sessionId", value: Integer sessionId }],
+        }
+        { Sqlite.decodeRecord <-
+            id: Sqlite.i64 "id",
+            user: Sqlite.str "username",
+        }
+    |> Task.mapErr \_ -> SessionNotFound
+    |> Task.await \ids ->
+        ids
+        |> List.first
+        |> Result.map \{ id, user } -> { id, user: LoggedIn user }
+        |> Task.fromResult
 
 parse : Request -> Result I64 [NoSessionCookie, InvalidSessionCookie]
 parse = \req ->
@@ -40,30 +72,3 @@ parse = \req ->
             |> Result.mapErr \_ -> InvalidSessionCookie
 
         _ -> Err NoSessionCookie
-
-get : I64, Str -> Task Session _
-get = \sessionId, path ->
-
-    notFoundStr = "NOT_FOUND"
-
-    query =
-        """
-        SELECT
-            sessions.session_id,
-            COALESCE(users.name,'$(notFoundStr)') AS 'username'
-        FROM sessions
-        LEFT OUTER JOIN users
-        ON sessions.user_id = users.id
-        WHERE sessions.session_id = :sessionId;
-        """
-
-    bindings = [{ name: ":sessionId", value: Integer sessionId }]
-
-    rows = SQLite3.execute { path, query, bindings } |> Task.mapErr! SqlErrGettingSession
-
-    when rows is
-        [] -> Task.err SessionNotFound
-        [[Integer id, String _username], ..] ->
-            Task.ok { id, user: LoggedIn "Demo User" }
-
-        _ -> Task.err (UnexpectedValues "unexpected values in get Session, got $(Inspect.toStr rows)")
