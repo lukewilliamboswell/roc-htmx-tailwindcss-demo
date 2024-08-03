@@ -11,56 +11,49 @@ import Models.Session exposing [Session]
 
 new : Str -> Task I64 _
 new = \path ->
+    Task.err TODO
+    #Sqlite.execute! {
+    #    path,
+    #    query: "INSERT INTO sessions (session_id) VALUES (abs(random()));",
+    #    bindings: [],
+    #}
 
-    Sqlite.execute! {
-        path,
-        query: "INSERT INTO sessions (session_id) VALUES (abs(random()));",
-        bindings: [],
-    }
-
-    ids =
-        Sqlite.query!
-            {
-                path,
-                query: "SELECT last_insert_rowid();",
-                bindings: [],
-            }
-            (Sqlite.i64 "id")
-
-    when List.first ids is
-        Ok id -> Task.ok id
-        Err _ -> Task.err MoreThanOneInserted
+    #Sqlite.queryExactlyOne! {
+    #    path,
+    #    query: "SELECT last_insert_rowid();",
+    #    bindings: [],
+    #    row: Sqlite.i64 "id",
+    #}
 
 get : I64, Str -> Task Session _
 get = \sessionId, path ->
+    Task.err TODO
+    #notFoundStr = "NOT_FOUND"
 
-    notFoundStr = "NOT_FOUND"
-
-    Sqlite.query
-        {
-            path,
-            query:
-            """
-            SELECT
-                sessions.session_id,
-                COALESCE(users.name,'$(notFoundStr)') AS 'username'
-            FROM sessions
-            LEFT OUTER JOIN users
-            ON sessions.user_id = users.id
-            WHERE sessions.session_id = :sessionId;
-            """,
-            bindings: [{ name: ":sessionId", value: Integer sessionId }],
-        }
-        { Sqlite.decodeRecord <-
-            id: Sqlite.i64 "id",
-            user: Sqlite.str "username",
-        }
-    |> Task.mapErr \_ -> SessionNotFound
-    |> Task.await \ids ->
-        ids
-        |> List.first
-        |> Result.map \{ id, user } -> { id, user: LoggedIn user }
-        |> Task.fromResult
+    #Sqlite.query {
+    #    path,
+    #    query:
+    #    """
+    #    SELECT
+    #        sessions.session_id,
+    #        COALESCE(users.name,'$(notFoundStr)') AS 'username'
+    #    FROM sessions
+    #    LEFT OUTER JOIN users
+    #    ON sessions.user_id = users.id
+    #    WHERE sessions.session_id = :sessionId;
+    #    """,
+    #    bindings: [{ name: ":sessionId", value: Integer sessionId }],
+    #    rows: { Sqlite.decodeRecord <-
+    #        id: Sqlite.i64 "id",
+    #        user: Sqlite.str "username",
+    #    },
+    #}
+    #|> Task.mapErr \_ -> SessionNotFound
+    #|> Task.await \ids ->
+    #    ids
+    #    |> List.first
+    #    |> Result.map \{ id, user } -> { id, user: LoggedIn user }
+    #    |> Task.fromResult
 
 parse : Request -> Result I64 [NoSessionCookie, InvalidSessionCookie]
 parse = \req ->

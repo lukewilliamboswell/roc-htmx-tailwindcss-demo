@@ -6,25 +6,23 @@ import pf.Sqlite
 
 list : { dbPath : Str } -> Task (List User) _
 list = \{ dbPath } ->
-    Sqlite.query
-        {
-            path: dbPath,
-            query:
-            """
-            SELECT
-            [id],
-            [name],
-            [avatar],
-            [email],
-            [biography],
-            [position],
-            [country],
-            [status]
-            FROM [users];
-            """,
-            bindings: [],
-        }
-        { Sqlite.decodeRecord <-
+    Sqlite.query {
+        path: dbPath,
+        query:
+        """
+        SELECT
+        [id],
+        [name],
+        [avatar],
+        [email],
+        [biography],
+        [position],
+        [country],
+        [status]
+        FROM [users];
+        """,
+        bindings: [],
+        rows: { Sqlite.decodeRecord <-
             id: Sqlite.i64 "id",
             name: Sqlite.str "name",
             avatar: Sqlite.str "avatar",
@@ -33,5 +31,5 @@ list = \{ dbPath } ->
             position: Sqlite.str "position",
             country: Sqlite.str "country",
             status: Sqlite.str "status",
-        }
-    |> Task.mapErr SqlErrGettingUsers
+        },
+    }
