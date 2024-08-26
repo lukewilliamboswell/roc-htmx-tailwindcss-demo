@@ -4,9 +4,8 @@ module [
     get,
 ]
 
-import pf.Task exposing [Task]
-import pf.Http exposing [Request]
-import pf.SQLite3
+import web.Http exposing [Request]
+import web.SQLite3
 import Models.Session exposing [Session]
 
 new : Str -> Task I64 _
@@ -15,10 +14,8 @@ new = \path ->
     query =
         "INSERT INTO sessions (session_id) VALUES (abs(random()));"
 
-    _ <-
-        SQLite3.execute { path, query, bindings: [] }
-        |> Task.mapErr \err -> SqlError err
-        |> Task.await
+    _ = SQLite3.execute { path, query, bindings: [] }
+        |> Task.mapErr! \err -> SqlError err
 
     rows =
         { path, query: "SELECT last_insert_rowid();", bindings: [] }

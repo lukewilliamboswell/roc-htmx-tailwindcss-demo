@@ -1,8 +1,7 @@
 module [list]
 
 import Models.User exposing [User]
-import pf.Task exposing [Task]
-import pf.SQLite3
+import web.SQLite3
 
 list : { dbPath : Str } -> Task (List User) _
 list = \{ dbPath } ->

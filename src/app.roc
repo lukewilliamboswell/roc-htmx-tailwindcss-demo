@@ -1,19 +1,18 @@
-app [main] {
-    # TODO replace with 0.6.0 latest release when it is available
-    pf: platform "https://github.com/roc-lang/basic-webserver/releases/download/0.6.0/LQS_Avcf8ogi1SqwmnytRD4SMYiZ4UcRCZwmAjj1RNY.tar.gz",
+app [Model, server] {
+    # TODO replace latest release when it is available
+    web: platform "https://github.com/lukewilliamboswell/basic-webserver/releases/download/20240826-1/qL67spHeASUnvLydrFi2JFFj6OTui7ylDEi1Be3kH8k.tar.br",
     html: "https://github.com/Hasnep/roc-html/releases/download/v0.6.0/IOyNfA4U_bCVBihrs95US9Tf5PGAWh3qvrBN4DRbK5c.tar.br",
     ansi: "https://github.com/lukewilliamboswell/roc-ansi/releases/download/0.1.1/cPHdNPNh8bjOrlOgfSaGBJDz6VleQwsPdW0LJK6dbGQ.tar.br",
     json: "https://github.com/lukewilliamboswell/roc-json/releases/download/0.10.0/KbIfTNbxShRX1A1FgXei1SpO5Jn8sgP6HP6PXbi-xyA.tar.br",
 }
 
-import pf.Stdout
-import pf.Stderr
-import pf.Task exposing [Task]
-import pf.Http exposing [Request, Response]
-import pf.Utc
-import pf.Path
-import pf.File
-import pf.Url
+import web.Stdout
+import web.Stderr
+import web.Http exposing [Request, Response]
+import web.Utc
+import web.Path
+import web.File
+import web.Url
 import ansi.Color
 import Helpers exposing [parseQueryParams, respondTemplate, info]
 import Sql.Session
@@ -24,10 +23,17 @@ import Views.Layout
 import Controllers.Product
 import Controllers.User
 
+Model : {}
+
 staticBaseUrl = "static"
 
-main : Request -> Task Response []
-main = \req -> Task.onErr (handleReq req) \err ->
+server = {init, respond}
+
+init : Task Model [Exit I32 Str]_
+init = Task.ok {}
+
+respond : Request, Model -> Task Response _
+respond = \req, _ -> Task.onErr (handleReq req) \err ->
         when err is
             URLNotFound url ->
                 methodStr = req.method |> Http.methodToStr
@@ -208,7 +214,7 @@ getStaticFile = \path ->
         body,
     }
 
-logRequest : Request -> Task {} *
+logRequest : Request -> Task {} _
 logRequest = \req ->
     date = Utc.now |> Task.map! Utc.toIso8601Str
     method = Http.methodToStr req.method
