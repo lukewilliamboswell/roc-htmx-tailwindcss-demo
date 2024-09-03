@@ -1,6 +1,6 @@
 app [Model, server] {
     # TODO replace latest release when it is available
-    web: platform "https://github.com/lukewilliamboswell/basic-webserver/releases/download/20240826-1/qL67spHeASUnvLydrFi2JFFj6OTui7ylDEi1Be3kH8k.tar.br",
+    web: platform "https://github.com/roc-lang/basic-webserver/releases/download/0.9.0/taU2jQuBf-wB8EJb0hAkrYLYOGacUU5Y9reiHG45IY4.tar.br",
     html: "https://github.com/Hasnep/roc-html/releases/download/v0.6.0/IOyNfA4U_bCVBihrs95US9Tf5PGAWh3qvrBN4DRbK5c.tar.br",
     ansi: "https://github.com/lukewilliamboswell/roc-ansi/releases/download/0.1.1/cPHdNPNh8bjOrlOgfSaGBJDz6VleQwsPdW0LJK6dbGQ.tar.br",
     json: "https://github.com/lukewilliamboswell/roc-json/releases/download/0.10.0/KbIfTNbxShRX1A1FgXei1SpO5Jn8sgP6HP6PXbi-xyA.tar.br",
@@ -27,7 +27,7 @@ Model : {}
 
 staticBaseUrl = "static"
 
-server = {init, respond}
+server = { init, respond }
 
 init : Task Model [Exit I32 Str]_
 init = Task.ok {}

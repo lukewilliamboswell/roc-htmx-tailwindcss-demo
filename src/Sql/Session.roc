@@ -14,8 +14,9 @@ new = \path ->
     query =
         "INSERT INTO sessions (session_id) VALUES (abs(random()));"
 
-    _ = SQLite3.execute { path, query, bindings: [] }
-        |> Task.mapErr! \err -> SqlError err
+    _ =
+        SQLite3.execute { path, query, bindings: [] }
+            |> Task.mapErr! \err -> SqlError err
 
     rows =
         { path, query: "SELECT last_insert_rowid();", bindings: [] }
