@@ -11,9 +11,8 @@ module [
     info,
 ]
 
-import pf.Task exposing [Task]
-import pf.Stdout
-import pf.Http exposing [Response]
+import web.Stdout
+import web.Http exposing [Response]
 import html.Html
 
 respondRedirect : Str -> Task Response []_
