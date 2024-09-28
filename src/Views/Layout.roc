@@ -24,7 +24,7 @@ headerTemplate = Views.Pages.header {
 # }
 
 navbarTemplate : Str
-navbarTemplate = Views.Pages.navbar {
+navbarTemplate = Views.Pages.navBar {
     relURL: "",
     staticBaseUrl,
 }
