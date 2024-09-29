@@ -28,4 +28,5 @@ rm -rf app.db && sqlite3 app.db < app.sql
 # note we do this in a subshell so we can kill both the roc and simple-http-server processes
 # with a single ctrl-c, it just makes life easier
 cd www
-../src/app
+
+ROC_BASIC_WEBSERVER_HOST=127.0.0.1 ROC_BASIC_WEBSERVER_PORT=8001 ../src/app

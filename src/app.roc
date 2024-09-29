@@ -33,45 +33,48 @@ init : Task Model [Exit I32 Str]_
 init = Task.ok {}
 
 respond : Request, Model -> Task Response _
-respond = \req, _ -> Task.onErr (handleReq req) \err ->
-        when err is
-            URLNotFound url ->
-                methodStr = req.method |> Http.methodToStr
-                errMsg = Str.joinWith ["404 NotFound" |> Color.fg Yellow, methodStr, url] " "
-                Stderr.line! errMsg
+respond = \req, _ -> Task.onErr (handleReq req) (handleAppErr req)
 
-                Views.Pages.error404 { staticBaseUrl }
-                |> Views.Layout.normal
-                |> respondTemplate 404 []
+handleAppErr : Request -> _ -> Task Response _
+handleAppErr = \req -> \err ->
+    when err is
+        URLNotFound url ->
+            methodStr = req.method |> Http.methodToStr
+            errMsg = Str.joinWith ["404 NotFound" |> Color.fg Yellow, methodStr, url] " "
+            Stderr.line! errMsg
 
-            InvalidSessionCookie ->
-                Views.Pages.error404 { staticBaseUrl }
-                |> Views.Layout.normal
-                |> respondTemplate 404 []
+            Views.Pages.error404 { staticBaseUrl }
+            |> Views.Layout.normal
+            |> respondTemplate 404 []
 
-            Unauthorized ->
-                Views.Pages.error401 { staticBaseUrl }
-                |> Views.Layout.normal
-                |> respondTemplate 401 []
+        InvalidSessionCookie ->
+            Views.Pages.error404 { staticBaseUrl }
+            |> Views.Layout.normal
+            |> respondTemplate 404 []
 
-            NewSession sessionId ->
-                # Redirect to the same URL with the new session ID
-                Task.ok {
-                    status: 303,
-                    headers: [
-                        { name: "Set-Cookie", value: "sessionId=$(Num.toStr sessionId)" },
-                        { name: "Location", value: req.url },
-                    ],
-                    body: [],
-                }
+        Unauthorized ->
+            Views.Pages.error401 { staticBaseUrl }
+            |> Views.Layout.normal
+            |> respondTemplate 401 []
 
-            _ ->
-                errMsg = Str.joinWith ["500 Server Error" |> Color.fg Red, Inspect.toStr err] " "
-                Stderr.line! errMsg
+        NewSession sessionId ->
+            # Redirect to the same URL with the new session ID
+            Task.ok {
+                status: 303,
+                headers: [
+                    { name: "Set-Cookie", value: "sessionId=$(Num.toStr sessionId)" },
+                    { name: "Location", value: req.url },
+                ],
+                body: [],
+            }
 
-                Views.Pages.error500 { staticBaseUrl }
-                |> Views.Layout.normal
-                |> respondTemplate 500 []
+        _ ->
+            errMsg = Str.joinWith ["500 Server Error" |> Color.fg Red, Inspect.toStr err] " "
+            Stderr.line! errMsg
+
+            Views.Pages.error500 { staticBaseUrl }
+            |> Views.Layout.normal
+            |> respondTemplate 500 []
 
 handleReq : Request -> Task Response _
 handleReq = \req ->
