@@ -1,5 +1,4 @@
 app [Model, server] {
-    # TODO replace latest release when it is available
     web: platform "https://github.com/roc-lang/basic-webserver/releases/download/0.9.0/taU2jQuBf-wB8EJb0hAkrYLYOGacUU5Y9reiHG45IY4.tar.br",
     html: "https://github.com/Hasnep/roc-html/releases/download/v0.6.0/IOyNfA4U_bCVBihrs95US9Tf5PGAWh3qvrBN4DRbK5c.tar.br",
     ansi: "https://github.com/lukewilliamboswell/roc-ansi/releases/download/0.1.1/cPHdNPNh8bjOrlOgfSaGBJDz6VleQwsPdW0LJK6dbGQ.tar.br",
@@ -13,6 +12,7 @@ import web.Utc
 import web.Path
 import web.File
 import web.Url
+import web.Env
 import ansi.Color
 import Helpers exposing [parseQueryParams, respondTemplate, info]
 import Sql.Session
@@ -23,61 +23,67 @@ import Views.Layout
 import Controllers.Product
 import Controllers.User
 
-Model : {}
-
-staticBaseUrl = "static"
+Model : {
+    basePath : Str,
+}
 
 server = { init, respond }
 
 init : Task Model [Exit I32 Str]_
-init = Task.ok {}
+init =
+
+    basePath = Env.var "STATIC_FILES" |> Task.mapErr! UnableToReadStaticFiles
+
+    Task.ok {
+        basePath,
+    }
 
 respond : Request, Model -> Task Response _
-respond = \req, _ -> Task.onErr (handleReq req) (handleAppErr req)
+respond = \req, model -> Task.onErr (handleReq req model) (handleAppErr req)
 
-handleAppErr : Request -> _ -> Task Response _
+handleAppErr : Request -> (_ -> Task Response _)
 handleAppErr = \req -> \err ->
-    when err is
-        URLNotFound url ->
-            methodStr = req.method |> Http.methodToStr
-            errMsg = Str.joinWith ["404 NotFound" |> Color.fg Yellow, methodStr, url] " "
-            Stderr.line! errMsg
+        when err is
+            URLNotFound url ->
+                methodStr = req.method |> Http.methodToStr
+                errMsg = Str.joinWith ["404 NotFound" |> Color.fg Yellow, methodStr, url] " "
+                Stderr.line! errMsg
 
-            Views.Pages.error404 { staticBaseUrl }
-            |> Views.Layout.normal
-            |> respondTemplate 404 []
+                Views.Pages.error404 {}
+                |> Views.Layout.normal
+                |> respondTemplate 404 []
 
-        InvalidSessionCookie ->
-            Views.Pages.error404 { staticBaseUrl }
-            |> Views.Layout.normal
-            |> respondTemplate 404 []
+            InvalidSessionCookie ->
+                Views.Pages.error404 {}
+                |> Views.Layout.normal
+                |> respondTemplate 404 []
 
-        Unauthorized ->
-            Views.Pages.error401 { staticBaseUrl }
-            |> Views.Layout.normal
-            |> respondTemplate 401 []
+            Unauthorized ->
+                Views.Pages.error401 {}
+                |> Views.Layout.normal
+                |> respondTemplate 401 []
 
-        NewSession sessionId ->
-            # Redirect to the same URL with the new session ID
-            Task.ok {
-                status: 303,
-                headers: [
-                    { name: "Set-Cookie", value: "sessionId=$(Num.toStr sessionId)" },
-                    { name: "Location", value: req.url },
-                ],
-                body: [],
-            }
+            NewSession sessionId ->
+                # Redirect to the same URL with the new session ID
+                Task.ok {
+                    status: 303,
+                    headers: [
+                        { name: "Set-Cookie", value: "sessionId=$(Num.toStr sessionId)" },
+                        { name: "Location", value: req.url },
+                    ],
+                    body: [],
+                }
 
-        _ ->
-            errMsg = Str.joinWith ["500 Server Error" |> Color.fg Red, Inspect.toStr err] " "
-            Stderr.line! errMsg
+            _ ->
+                errMsg = Str.joinWith ["500 Server Error" |> Color.fg Red, Inspect.toStr err] " "
+                Stderr.line! errMsg
 
-            Views.Pages.error500 { staticBaseUrl }
-            |> Views.Layout.normal
-            |> respondTemplate 500 []
+                Views.Pages.error500 {}
+                |> Views.Layout.normal
+                |> respondTemplate 500 []
 
-handleReq : Request -> Task Response _
-handleReq = \req ->
+handleReq : Request, Model -> Task Response _
+handleReq = \req, model ->
 
     logRequest! req # Log the date, time, method, and url to stdout
 
@@ -102,43 +108,37 @@ handleReq = \req ->
     # dbPath = Env.var "DB_PATH" |> Task.mapErr! UnableToReadDbPATH
     dbPath = "../app.db"
 
+    getStaticFile = staticFile model.basePath
+
+    dbg urlSegments
+
     when (req.method, urlSegments) is
-        (Get, ["static", .. as rest]) -> getStaticFile (rest |> Str.joinWith "/" |> Str.withPrefix "./")
-        (Get, ["favicon.ico"]) -> getStaticFile "./favicon.ico"
-        (Get, ["android-chrome-192x192.png"]) -> getStaticFile "./android-chrome-192x192.png"
-        (Get, ["android-chrome-512x512.png"]) -> getStaticFile "./android-chrome-512x512.png"
+        (Get, ["www", .. as rest]) -> getStaticFile (Str.joinWith rest "/")
+        (Get, ["favicon.ico"]) -> getStaticFile "favicon.ico"
+        (Get, ["android-chrome-192x192.png"]) -> getStaticFile "android-chrome-192x192.png"
+        (Get, ["android-chrome-512x512.png"]) -> getStaticFile "android-chrome-512x512.png"
         (Get, ["signin"]) ->
-            Views.Pages.pageSignIn {
-                staticBaseUrl,
-            }
+            Views.Pages.pageSignIn {}
             |> Views.Layout.normal
             |> respondTemplate 200 []
 
         (Get, ["signup"]) ->
-            Views.Pages.pageSignUp {
-                staticBaseUrl,
-            }
+            Views.Pages.pageSignUp {}
             |> Views.Layout.normal
             |> respondTemplate 200 []
 
         (Get, ["forgotpassword"]) ->
-            Views.Pages.pageForgotPassword {
-                staticBaseUrl,
-            }
+            Views.Pages.pageForgotPassword {}
             |> Views.Layout.normal
             |> respondTemplate 200 []
 
         (Get, ["resetpassword"]) ->
-            Views.Pages.pageResetPassword {
-                staticBaseUrl,
-            }
+            Views.Pages.pageResetPassword {}
             |> Views.Layout.normal
             |> respondTemplate 200 []
 
         (Get, ["profilelock"]) ->
-            Views.Pages.pageProfileLock {
-                staticBaseUrl,
-            }
+            Views.Pages.pageProfileLock {}
             |> Views.Layout.normal
             |> respondTemplate 200 []
 
@@ -159,7 +159,7 @@ handleReq = \req ->
             }
 
         (_, ["settings", ..]) ->
-            view = Views.Pages.pageSettings { staticBaseUrl }
+            view = Views.Pages.pageSettings {}
 
             if partial then
                 view
@@ -177,8 +177,11 @@ handleReq = \req ->
         (Get, ["test500"]) -> Task.err Test500Error
         _ -> Task.err (URLNotFound req.url)
 
-getStaticFile : Str -> Task Response _
-getStaticFile = \path ->
+
+staticFile : Str -> (Str -> Task Response _)
+staticFile = \basePath -> \relPath ->
+
+    path = "$(basePath)/$(relPath)"
 
     body =
         Path.fromStr path
@@ -186,24 +189,25 @@ getStaticFile = \path ->
             |> Task.mapErr! \err -> ErrGettingStaticFile path (Inspect.toStr err)
 
     bytesRead = List.len body
+
     info! "Read $(Num.toStr bytesRead) bytes for static file $(path)"
 
     contentTypeHeader =
-        if Str.endsWith path ".svg" then
+        if Str.endsWith relPath ".svg" then
             { name: "Content-Type", value: "image/svg+xml" }
-        else if Str.endsWith path ".css" then
+        else if Str.endsWith relPath ".css" then
             { name: "Content-Type", value: "text/css" }
-        else if Str.endsWith path ".js" then
+        else if Str.endsWith relPath ".js" then
             { name: "Content-Type", value: "application/javascript" }
-        else if Str.endsWith path ".ico" then
+        else if Str.endsWith relPath ".ico" then
             { name: "Content-Type", value: "image/x-icon" }
-        else if Str.endsWith path ".png" then
+        else if Str.endsWith relPath ".png" then
             { name: "Content-Type", value: "image/png" }
-        else if Str.endsWith path ".jpg" then
+        else if Str.endsWith relPath ".jpg" then
             { name: "Content-Type", value: "image/jpeg" }
-        else if Str.endsWith path ".jpeg" then
+        else if Str.endsWith relPath ".jpeg" then
             { name: "Content-Type", value: "image/jpeg" }
-        else if Str.endsWith path ".gif" then
+        else if Str.endsWith relPath ".gif" then
             { name: "Content-Type", value: "image/gif" }
         else
             { name: "Content-Type", value: "application/octet-stream" }

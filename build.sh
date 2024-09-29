@@ -10,13 +10,11 @@
 # https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
 set -euxo pipefail
 
-ROC="roc"
-
 # generate templates
 rtl -e "html" -i ./templates/ -o ./src/Views/
 
 # build app
-$ROC build src/app.roc
+roc build src/main.roc --output src/server
 
 # build css
 tailwindcss -i site.css -o www/app.css
@@ -25,8 +23,4 @@ tailwindcss -i site.css -o www/app.css
 rm -rf app.db && sqlite3 app.db < app.sql
 
 # start server
-# note we do this in a subshell so we can kill both the roc and simple-http-server processes
-# with a single ctrl-c, it just makes life easier
-cd www
-
-ROC_BASIC_WEBSERVER_HOST=127.0.0.1 ROC_BASIC_WEBSERVER_PORT=8001 ../src/app
+STATIC_FILES=www/ ROC_BASIC_WEBSERVER_HOST=127.0.0.1 ROC_BASIC_WEBSERVER_PORT=8001 src/server

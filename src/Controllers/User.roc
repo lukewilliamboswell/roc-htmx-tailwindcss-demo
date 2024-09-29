@@ -7,9 +7,6 @@ import Views.Layout
 import Views.Pages
 import Helpers exposing [respondTemplate, parseQueryParams]
 
-# TODO this should be a module parameter
-staticBaseUrl = "static"
-
 handleRoutes :
     {
         req : Request,
@@ -40,7 +37,6 @@ handleRoutes = \{ req, urlSegments, dbPath, getSession } ->
             users = Sql.User.list! { dbPath }
 
             view = Views.Pages.pageUsers {
-                staticBaseUrl,
                 users,
             }
 

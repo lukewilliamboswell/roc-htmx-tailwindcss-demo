@@ -5,6 +5,7 @@ www/app.css
 # binary files
 app
 main
+server
 
 # the database
 app.db

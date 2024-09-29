@@ -5,15 +5,11 @@ module [
 
 import Views.Pages
 
-# TODO this should be a module parameter
-staticBaseUrl = "static"
-
 headerTemplate : Str
 headerTemplate = Views.Pages.header {
-    staticBaseUrl,
     authors: "Themesberg",
     description: "Get started with a free and open-source admin dashboard layout built with Tailwind CSS and Flowbite featuring charts, widgets, CRUD layouts, authentication pages, and more",
-    stylesheet: Views.Pages.stylesheet { staticBaseUrl },
+    stylesheet: Views.Pages.stylesheet {},
     title: "Tailwind CSS Admin Dashboard - Flowbite",
 }
 
@@ -24,9 +20,8 @@ headerTemplate = Views.Pages.header {
 # }
 
 navbarTemplate : Str
-navbarTemplate = Views.Pages.navbar {
+navbarTemplate = Views.Pages.navBar {
     relURL: "",
-    staticBaseUrl,
 }
 
 sidebarTemplate : Str
