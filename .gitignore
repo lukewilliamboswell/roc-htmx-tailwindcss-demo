@@ -1,9 +1,13 @@
+# generated files
 src/Views/Pages.roc
-
-app
 www/app.css
+
+# binary files
+app
+main
+
+# the database
 app.db
 
+# macOS files
 .DS_Store
-
-find.py
