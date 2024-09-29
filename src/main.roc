@@ -25,6 +25,7 @@ import Controllers.User
 
 Model : {
     basePath : Str,
+    dbPath : Str,
 }
 
 server = { init, respond }
@@ -34,8 +35,11 @@ init =
 
     basePath = Env.var "STATIC_FILES" |> Task.mapErr! UnableToReadStaticFiles
 
+    dbPath = Env.var "DB_PATH" |> Task.mapErr! UnableToReadDbPATH
+
     Task.ok {
         basePath,
+        dbPath,
     }
 
 respond : Request, Model -> Task Response _
@@ -105,9 +109,6 @@ handleReq = \req, model ->
         |> Result.map \val -> if val == "true" then Bool.true else Bool.false
         |> Result.withDefault Bool.false
 
-    # dbPath = Env.var "DB_PATH" |> Task.mapErr! UnableToReadDbPATH
-    dbPath = "../app.db"
-
     getStaticFile = staticFile model.basePath
 
     dbg urlSegments
@@ -146,7 +147,7 @@ handleReq = \req, model ->
             Controllers.Product.handleRoutes {
                 req,
                 urlSegments: List.dropFirst urlSegments 1,
-                dbPath,
+                dbPath: model.dbPath,
                 getSession,
             }
 
@@ -154,7 +155,7 @@ handleReq = \req, model ->
             Controllers.User.handleRoutes {
                 req,
                 urlSegments: List.dropFirst urlSegments 1,
-                dbPath,
+                dbPath: model.dbPath,
                 getSession,
             }
 
