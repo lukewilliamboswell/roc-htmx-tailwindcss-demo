@@ -2,7 +2,6 @@ module [handleRoutes]
 
 import web.Http exposing [Request, Response]
 import Sql.Product
-import Models.Session exposing [Session]
 import Views.Layout
 import Views.Pages
 import Helpers exposing [respondTemplate, parseQueryParams]
@@ -12,14 +11,9 @@ handleRoutes :
         req : Request,
         urlSegments : List Str,
         dbPath : Str,
-        getSession : Request, Str -> Task Session _,
     }
     -> Task Response _
-handleRoutes = \{ req, urlSegments, dbPath, getSession } ->
-
-    session = getSession! req dbPath
-    # confirm the user is Authenticated
-    Models.Session.isAuthenticated session.user |> Task.fromResult!
+handleRoutes = \{ req, urlSegments, dbPath } ->
 
     queryParams =
         req.url

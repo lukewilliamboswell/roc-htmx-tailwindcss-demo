@@ -15,9 +15,6 @@ import web.Url
 import web.Env
 import ansi.Color
 import Helpers exposing [parseQueryParams, respondTemplate, info]
-import Sql.Session
-import Sql.Session
-import Models.Session exposing [Session]
 import Views.Pages
 import Views.Layout
 import Controllers.Product
@@ -57,26 +54,26 @@ handleAppErr = \req -> \err ->
                 |> Views.Layout.normal
                 |> respondTemplate 404 []
 
-            InvalidSessionCookie ->
-                Views.Pages.error404 {}
-                |> Views.Layout.normal
-                |> respondTemplate 404 []
+            #InvalidSessionCookie ->
+            #    Views.Pages.error404 {}
+            #    |> Views.Layout.normal
+            #    |> respondTemplate 404 []
 
             Unauthorized ->
                 Views.Pages.error401 {}
                 |> Views.Layout.normal
                 |> respondTemplate 401 []
 
-            NewSession sessionId ->
-                # Redirect to the same URL with the new session ID
-                Task.ok {
-                    status: 303,
-                    headers: [
-                        { name: "Set-Cookie", value: "sessionId=$(Num.toStr sessionId)" },
-                        { name: "Location", value: req.url },
-                    ],
-                    body: [],
-                }
+            #NewSession sessionId ->
+            #    # Redirect to the same URL with the new session ID
+            #    Task.ok {
+            #        status: 303,
+            #        headers: [
+            #            { name: "Set-Cookie", value: "sessionId=$(Num.toStr sessionId)" },
+            #            { name: "Location", value: req.url },
+            #        ],
+            #        body: [],
+            #    }
 
             _ ->
                 errMsg = Str.joinWith ["500 Server Error" |> Color.fg Red, Inspect.toStr err] " "
@@ -148,7 +145,6 @@ handleReq = \req, model ->
                 req,
                 urlSegments: List.dropFirst urlSegments 1,
                 dbPath: model.dbPath,
-                getSession,
             }
 
         (_, ["users", ..]) ->
@@ -156,7 +152,6 @@ handleReq = \req, model ->
                 req,
                 urlSegments: List.dropFirst urlSegments 1,
                 dbPath: model.dbPath,
-                getSession,
             }
 
         (_, ["settings", ..]) ->
@@ -231,15 +226,15 @@ logRequest = \req ->
     # body = req.body |> Str.fromUtf8 |> Result.withDefault "<invalid utf8 body>"
     Stdout.line! "$(date) $(method) $(url)"
 
-getSession : Request, Str -> Task Session _
-getSession = \req, dbPath ->
-    Sql.Session.parse req
-        |> Task.fromResult
-        |> Task.await \id -> Sql.Session.get id dbPath
-        |> Task.onErr \err ->
-            if err == SessionNotFound || err == NoSessionCookie then
-                id = Sql.Session.new! dbPath
+#getSession : Request, Str -> Task Session _
+#getSession = \req, dbPath ->
+#    Sql.Session.parse req
+#        |> Task.fromResult
+#        |> Task.await \id -> Sql.Session.get id dbPath
+#        |> Task.onErr \err ->
+#            if err == SessionNotFound || err == NoSessionCookie then
+#                id = Sql.Session.new! dbPath
 
-                Task.err (NewSession id)
-            else
-                Task.err err
+#                Task.err (NewSession id)
+#            else
+#                Task.err err

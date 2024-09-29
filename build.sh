@@ -18,4 +18,8 @@ tailwindcss -i site.css -o www/app.css
 rm -rf app.db && sqlite3 app.db < app.sql
 
 # start server
-STATIC_FILES=www/ ROC_BASIC_WEBSERVER_HOST=127.0.0.1 ROC_BASIC_WEBSERVER_PORT=8001 src/server
+DB_PATH=app.db \
+STATIC_FILES=www/ \
+ROC_BASIC_WEBSERVER_HOST=127.0.0.1 \
+ROC_BASIC_WEBSERVER_PORT=8001 \
+src/server
