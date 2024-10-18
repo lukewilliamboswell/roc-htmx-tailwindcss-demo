@@ -5,28 +5,30 @@ module [
 ]
 
 import web.Http exposing [Request]
-import web.SQLite3
+import web.Sqlite
 import Models.Session exposing [Session]
 
 new : Str -> Task I64 _
 new = \path ->
 
-    query =
-        "INSERT INTO sessions (session_id) VALUES (abs(random()));"
+    Sqlite.execute {
+        path,
+        query: "INSERT INTO sessions (session_id) VALUES (abs(random()));",
+        bindings: [],
+    }
+        |> Task.mapErr! \err -> SqlError err
 
-    _ =
-        SQLite3.execute { path, query, bindings: [] }
-            |> Task.mapErr! \err -> SqlError err
-
-    rows =
-        { path, query: "SELECT last_insert_rowid();", bindings: [] }
-            |> SQLite3.execute
-            |> Task.onErr! \err -> SqlError err |> Task.err
-
-    when rows is
-        [] -> Task.err (UnexpectedValues "unexpected values in new Session, got NIL rows")
-        [[Integer id], ..] -> Task.ok id
-        _ -> Task.err (UnexpectedValues "unexpected values in new Session, got $(Inspect.toStr rows)")
+    Sqlite.queryExactlyOne {
+        path,
+        query: "SELECT last_insert_rowid();",
+        bindings: [],
+        row: Sqlite.i64 "id",
+    }
+        |> Task.mapErr! \err ->
+            when err is
+                NoRowsReturned -> UnexpectedValues "unexpected values in new Session, got NIL rows"
+                TooManyRowsReturned -> UnexpectedValues "unexpected values in new Session, got TOO MANY rows"
+                e -> SqlError e
 
 parse : Request -> Result I64 [NoSessionCookie, InvalidSessionCookie]
 parse = \req ->
@@ -55,13 +57,13 @@ get = \sessionId, path ->
         WHERE sessions.session_id = :sessionId;
         """
 
-    bindings = [{ name: ":sessionId", value: Integer sessionId }]
-
-    rows = SQLite3.execute { path, query, bindings } |> Task.mapErr! SqlErrGettingSession
-
-    when rows is
-        [] -> Task.err SessionNotFound
-        [[Integer id, String _username], ..] ->
-            Task.ok { id, user: LoggedIn "Demo User" }
-
-        _ -> Task.err (UnexpectedValues "unexpected values in get Session, got $(Inspect.toStr rows)")
+    Sqlite.queryExactlyOne {
+        path,
+        query,
+        bindings: [{ name: ":sessionId", value: Integer sessionId }],
+        row: { Sqlite.decodeRecord <-
+            id: Sqlite.i64 "sessions.session_id",
+            user: Sqlite.str "username" |> Sqlite.mapValue LoggedIn,
+        },
+    }
+        |> Task.mapErr! SqlErrGettingSession

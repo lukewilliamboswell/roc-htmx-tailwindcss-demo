@@ -1,7 +1,7 @@
 module [list]
 
 import Models.User exposing [User]
-import web.SQLite3
+import web.Sqlite
 
 list : { dbPath : Str } -> Task (List User) _
 list = \{ dbPath } ->
@@ -20,33 +20,20 @@ list = \{ dbPath } ->
         FROM [users];
         """
 
-    {
+    Sqlite.query {
         path: dbPath,
         query,
         bindings: [],
+        rows: { Sqlite.decodeRecord <-
+            id: Sqlite.i64 "id",
+            name: Sqlite.str "name",
+            avatar: Sqlite.str "avatar",
+            email: Sqlite.str "email",
+            biography: Sqlite.str "biography",
+            position: Sqlite.str "position",
+            country: Sqlite.str "country",
+            status: Sqlite.str "status",
+
+        },
     }
-    |> SQLite3.execute
-    |> Task.mapErr SqlErrGettingUsers
-    |> Task.await \rows -> rows |> parseUserRows [] |> Task.fromResult
-
-parseUserRows : List (List SQLite3.Value), List User -> Result (List User) _
-parseUserRows = \rows, acc ->
-    when rows is
-        [] -> Ok acc
-        [[Integer id, String name, String avatar, String email, String biography, String position, String country, String status], .. as rest] ->
-            parseUserRows
-                rest
-                (
-                    List.append acc {
-                        id,
-                        name,
-                        avatar,
-                        email,
-                        biography,
-                        position,
-                        country,
-                        status,
-                    }
-                )
-
-        row -> Err (UnexpectedValues "unexpected values, got row $(Inspect.toStr row)")
+    |> Task.mapErr \err -> SqlErrGettingUsers err

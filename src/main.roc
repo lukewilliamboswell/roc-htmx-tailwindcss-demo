@@ -1,7 +1,8 @@
 app [Model, server] {
-    web: platform "https://github.com/roc-lang/basic-webserver/releases/download/0.9.0/taU2jQuBf-wB8EJb0hAkrYLYOGacUU5Y9reiHG45IY4.tar.br",
+    # TODO with basic-webserver version 0.10.0
+    web: platform "../../basic-webserver/platform/main.roc",
     html: "https://github.com/Hasnep/roc-html/releases/download/v0.6.0/IOyNfA4U_bCVBihrs95US9Tf5PGAWh3qvrBN4DRbK5c.tar.br",
-    ansi: "https://github.com/lukewilliamboswell/roc-ansi/releases/download/0.1.1/cPHdNPNh8bjOrlOgfSaGBJDz6VleQwsPdW0LJK6dbGQ.tar.br",
+    ansi: "https://github.com/lukewilliamboswell/roc-ansi/releases/download/0.7.0/NmbsrdwKIOb1DtUIV7L_AhCvTx7nhfaW3KkOpT7VUZg.tar.br",
     json: "https://github.com/lukewilliamboswell/roc-json/releases/download/0.10.0/KbIfTNbxShRX1A1FgXei1SpO5Jn8sgP6HP6PXbi-xyA.tar.br",
 }
 
@@ -13,7 +14,7 @@ import web.Path
 import web.File
 import web.Url
 import web.Env
-import ansi.Color
+import ansi.ANSI
 import Helpers exposing [parseQueryParams, respondTemplate, info]
 import Views.Pages
 import Views.Layout
@@ -47,7 +48,7 @@ handleAppErr = \req -> \err ->
         when err is
             URLNotFound url ->
                 methodStr = req.method |> Http.methodToStr
-                errMsg = Str.joinWith ["404 NotFound" |> Color.fg Yellow, methodStr, url] " "
+                errMsg = Str.joinWith ["404 NotFound" |> ANSI.color { fg: Standard Yellow }, methodStr, url] " "
                 Stderr.line! errMsg
 
                 Views.Pages.error404 {}
@@ -76,7 +77,7 @@ handleAppErr = \req -> \err ->
             #    }
 
             _ ->
-                errMsg = Str.joinWith ["500 Server Error" |> Color.fg Red, Inspect.toStr err] " "
+                errMsg = Str.joinWith ["500 Server Error" |> ANSI.color { fg: Standard Red }, Inspect.toStr err] " "
                 Stderr.line! errMsg
 
                 Views.Pages.error500 {}
