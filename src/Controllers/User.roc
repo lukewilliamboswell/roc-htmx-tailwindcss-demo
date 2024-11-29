@@ -2,7 +2,7 @@ module [handleRoutes]
 
 import web.Http exposing [Request, Response]
 import Sql.User
-#import Models.Session exposing [Session]
+# import Models.Session exposing [Session]
 import Views.Layout
 import Views.Pages
 import Helpers exposing [respondTemplate, parseQueryParams]
