@@ -16,12 +16,12 @@ new = \path ->
 
     _ =
         SQLite3.execute { path, query, bindings: [] }
-            |> Task.mapErr! \err -> SqlError err
+        |> Task.mapErr! \err -> SqlError err
 
     rows =
         { path, query: "SELECT last_insert_rowid();", bindings: [] }
-            |> SQLite3.execute
-            |> Task.onErr! \err -> SqlError err |> Task.err
+        |> SQLite3.execute
+        |> Task.onErr! \err -> SqlError err |> Task.err
 
     when rows is
         [] -> Task.err (UnexpectedValues "unexpected values in new Session, got NIL rows")
@@ -32,7 +32,7 @@ parse : Request -> Result I64 [NoSessionCookie, InvalidSessionCookie]
 parse = \req ->
     when req.headers |> List.keepIf \reqHeader -> reqHeader.name == "cookie" is
         [reqHeader] ->
-            Str.split reqHeader.value "="
+            Str.splitOn reqHeader.value "="
             |> List.get 1
             |> Result.try Str.toI64
             |> Result.mapErr \_ -> InvalidSessionCookie
