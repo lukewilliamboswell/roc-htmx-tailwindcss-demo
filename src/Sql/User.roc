@@ -1,10 +1,10 @@
-module [list]
+module [list!]
 
 import Models.User exposing [User]
 import web.SQLite3
 
-list : { dbPath : Str } -> Task (List User) _
-list = \{ dbPath } ->
+list! : { db_path : Str } => Result (List User) _
+list! = \{ db_path } ->
 
     query =
         """
@@ -20,21 +20,22 @@ list = \{ dbPath } ->
         FROM [users];
         """
 
-    {
-        path: dbPath,
-        query,
-        bindings: [],
-    }
-    |> SQLite3.execute
-    |> Task.mapErr SqlErrGettingUsers
-    |> Task.await \rows -> rows |> parseUserRows [] |> Task.fromResult
+    rows =
+        SQLite3.execute! {
+            path: db_path,
+            query,
+            bindings: [],
+        }
+        |> Result.mapErr? SqlErrGettingUsers
 
-parseUserRows : List (List SQLite3.Value), List User -> Result (List User) _
-parseUserRows = \rows, acc ->
+    parse_user_rows rows []
+
+parse_user_rows : List (List SQLite3.Value), List User -> Result (List User) _
+parse_user_rows = \rows, acc ->
     when rows is
         [] -> Ok acc
         [[Integer id, String name, String avatar, String email, String biography, String position, String country, String status], .. as rest] ->
-            parseUserRows
+            parse_user_rows
                 rest
                 (
                     List.append acc {

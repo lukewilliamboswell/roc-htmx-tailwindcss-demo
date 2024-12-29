@@ -16,12 +16,12 @@ new = \path ->
 
     _ =
         SQLite3.execute { path, query, bindings: [] }
-        |> Task.mapErr! \err -> SqlError err
+        |> Task.map_err! \err -> SqlError err
 
     rows =
         { path, query: "SELECT last_insert_rowid();", bindings: [] }
         |> SQLite3.execute
-        |> Task.onErr! \err -> SqlError err |> Task.err
+        |> Task.on_err! \err -> SqlError err |> Task.err
 
     when rows is
         [] -> Task.err (UnexpectedValues "unexpected values in new Session, got NIL rows")
@@ -30,9 +30,9 @@ new = \path ->
 
 parse : Request -> Result I64 [NoSessionCookie, InvalidSessionCookie]
 parse = \req ->
-    when req.headers |> List.keepIf \reqHeader -> reqHeader.name == "cookie" is
-        [reqHeader] ->
-            Str.splitOn reqHeader.value "="
+    when req.headers |> List.keep_if \req_header -> req_header.name == "cookie" is
+        [req_header] ->
+            Str.splitOn req_header.value "="
             |> List.get 1
             |> Result.try Str.toI64
             |> Result.mapErr \_ -> InvalidSessionCookie
@@ -40,24 +40,24 @@ parse = \req ->
         _ -> Err NoSessionCookie
 
 get : I64, Str -> Task Session _
-get = \sessionId, path ->
+get = \session_id, path ->
 
-    notFoundStr = "NOT_FOUND"
+    not_found_str = "NOT_FOUND"
 
     query =
         """
         SELECT
             sessions.session_id,
-            COALESCE(users.name,'$(notFoundStr)') AS 'username'
+            COALESCE(users.name,'$(not_found_str)') AS 'username'
         FROM sessions
         LEFT OUTER JOIN users
         ON sessions.user_id = users.id
         WHERE sessions.session_id = :sessionId;
         """
 
-    bindings = [{ name: ":sessionId", value: Integer sessionId }]
+    bindings = [{ name: ":sessionId", value: Integer session_id }]
 
-    rows = SQLite3.execute { path, query, bindings } |> Task.mapErr! SqlErrGettingSession
+    rows = SQLite3.execute { path, query, bindings } |> Task.map_err! SqlErrGettingSession
 
     when rows is
         [] -> Task.err SessionNotFound

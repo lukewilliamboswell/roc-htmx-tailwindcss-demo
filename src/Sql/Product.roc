@@ -1,10 +1,10 @@
-module [list]
+module [list!]
 
 import Models.Product exposing [Product]
 import web.SQLite3
 
-list : { dbPath : Str } -> Task (List Product) _
-list = \{ dbPath } ->
+list! : { db_path : Str } => Result (List Product) _
+list! = \{ db_path } ->
 
     query =
         """
@@ -19,21 +19,22 @@ list = \{ dbPath } ->
         FROM  [products];
         """
 
-    {
-        path: dbPath,
-        query,
-        bindings: [],
-    }
-    |> SQLite3.execute
-    |> Task.mapErr SqlErrGettingProducts
-    |> Task.await \rows -> rows |> parseProductRows [] |> Task.fromResult
+    rows =
+        SQLite3.execute! {
+            path: db_path,
+            query,
+            bindings: [],
+        }
+        |> Result.mapErr? SqlErrGettingProducts
 
-parseProductRows : List (List SQLite3.Value), List Product -> Result (List Product) _
-parseProductRows = \rows, acc ->
+    parse_product_rows rows []
+
+parse_product_rows : List (List SQLite3.Value), List Product -> Result (List Product) _
+parse_product_rows = \rows, acc ->
     when rows is
         [] -> Ok acc
         [[Integer id, String name, String category, String technology, String description, String price, String discount], .. as rest] ->
-            parseProductRows
+            parse_product_rows
                 rest
                 (
                     List.append acc {

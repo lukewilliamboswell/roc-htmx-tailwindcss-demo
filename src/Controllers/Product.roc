@@ -1,34 +1,34 @@
-module [handleRoutes]
+module [handle_routes!]
 
 import web.Http exposing [Request, Response]
 import Sql.Product
 import Views.Layout
 import Views.Pages
-import Helpers exposing [respondTemplate, parseQueryParams]
+import Helpers
 
-handleRoutes :
+handle_routes! :
     {
         req : Request,
-        urlSegments : List Str,
-        dbPath : Str,
+        url_segments : List Str,
+        db_path : Str,
     }
-    -> Task Response _
-handleRoutes = \{ req, urlSegments, dbPath } ->
+    => Result Response _
+handle_routes! = \{ req, url_segments, db_path } ->
 
-    queryParams =
-        req.url
-        |> parseQueryParams
+    query_params =
+        req.uri
+        |> Helpers.parse_query_params
         |> Result.withDefault (Dict.empty {})
 
     partial =
-        queryParams
+        query_params
         |> Dict.get "partial"
         |> Result.map \val -> if val == "true" then Bool.true else Bool.false
         |> Result.withDefault Bool.false
 
-    when (req.method, urlSegments) is
-        (Get, []) ->
-            products = Sql.Product.list! { dbPath }
+    when (req.method, url_segments) is
+        (GET, []) ->
+            products = Sql.Product.list!? { db_path }
 
             view = Views.Pages.pageProducts {
                 products,
@@ -36,14 +36,14 @@ handleRoutes = \{ req, urlSegments, dbPath } ->
 
             if partial then
                 view
-                |> respondTemplate 200 [
+                |> Helpers.respond_template! 200 [
                     { name: "HX-Push-Url", value: "/products" },
                 ]
             else
                 view
                 |> Views.Layout.sidebar
-                |> respondTemplate 200 [
+                |> Helpers.respond_template! 200 [
                     { name: "HX-Push-Url", value: "/products" },
                 ]
 
-        _ -> Task.err (NotHandled req)
+        _ -> Err (NotHandled req)
