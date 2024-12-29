@@ -3,8 +3,8 @@ module [list!]
 import Models.User exposing [User]
 import web.SQLite3
 
-list! : { dbPath : Str } => Result (List User) _
-list! = \{ dbPath } ->
+list! : { db_path : Str } => Result (List User) _
+list! = \{ db_path } ->
 
     query =
         """
@@ -22,20 +22,20 @@ list! = \{ dbPath } ->
 
     rows =
         SQLite3.execute! {
-            path: dbPath,
+            path: db_path,
             query,
             bindings: [],
         }
         |> Result.mapErr? SqlErrGettingUsers
 
-    parseUserRows rows []
+    parse_user_rows rows []
 
-parseUserRows : List (List SQLite3.Value), List User -> Result (List User) _
-parseUserRows = \rows, acc ->
+parse_user_rows : List (List SQLite3.Value), List User -> Result (List User) _
+parse_user_rows = \rows, acc ->
     when rows is
         [] -> Ok acc
         [[Integer id, String name, String avatar, String email, String biography, String position, String country, String status], .. as rest] ->
-            parseUserRows
+            parse_user_rows
                 rest
                 (
                     List.append acc {

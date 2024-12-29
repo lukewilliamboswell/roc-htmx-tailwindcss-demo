@@ -1,22 +1,19 @@
 module [
-    respondRedirect,
-    respondHtml,
-
-    decodeFormValues,
-
-    parseQueryParams,
-    queryParamsToStr,
-
-    parsePagedParams,
-    replaceQueryParams,
+    respond_redirect,
+    respond_html,
+    decode_form_values,
+    parse_query_params,
+    query_params_to_str,
+    parse_paged_params,
+    replace_query_params,
 ]
 
 import web.Task exposing [Task]
 import web.Http exposing [Response]
 import html.Html
 
-respondRedirect : Str -> Task Response []_
-respondRedirect = \next ->
+respond_redirect : Str -> Task Response []_
+respond_redirect = \next ->
     Task.ok {
         status: 303,
         headers: [
@@ -25,81 +22,81 @@ respondRedirect = \next ->
         body: [],
     }
 
-respondHtml : Html.Node, List { name : Str, value : Str } -> Task Response []_
-respondHtml = \node, otherHeaders ->
+respond_html : Html.Node, List { name : Str, value : Str } -> Task Response []_
+respond_html = \node, other_headers ->
     Task.ok {
         status: 200,
         headers: [
             { name: "Content-Type", value: "text/html; charset=utf-8" },
         ]
-        |> List.concat otherHeaders,
+        |> List.concat other_headers,
         body: Str.toUtf8 (Html.render node),
     }
 
-decodeFormValues : List U8 -> Task (Dict Str Str) _
-decodeFormValues = \body ->
-    Http.parseFormUrlEncoded body
+decode_form_values : List U8 -> Task (Dict Str Str) _
+decode_form_values = \body ->
+    Http.parse_form_url_encoded body
     |> Result.mapErr \BadUtf8 -> BadRequest InvalidFormEncoding
-    |> Task.fromResult
+    |> Task.from_result
 
-parseQueryParams : Str -> Result (Dict Str Str) _
-parseQueryParams = \url ->
-    when Str.splitOn url "?" is
-        [_, queryPart] -> queryPart |> Str.toUtf8 |> Http.parseFormUrlEncoded
+parse_query_params : Str -> Result (Dict Str Str) _
+parse_query_params = \url ->
+    when Str.split_on url "?" is
+        [_, query_part] -> query_part |> Str.toUtf8 |> Http.parse_form_url_encoded
         parts -> Err (InvalidQuery (Inspect.toStr parts))
 
-queryParamsToStr : Dict Str Str -> Str
-queryParamsToStr = \params ->
+query_params_to_str : Dict Str Str -> Str
+query_params_to_str = \params ->
     Dict.toList params
     |> List.map \(k, v) -> "$(k)=$(v)"
     |> Str.joinWith "&"
 
 expect
     "localhost:8000?port=8000&name=Luke"
-    |> parseQueryParams
-    |> Result.map queryParamsToStr
+    |> parse_query_params
+    |> Result.map query_params_to_str
     ==
     Ok "port=8000&name=Luke"
 
-parsePagedParams : Dict Str Str -> Result { page : I64, items : I64 } _
-parsePagedParams = \queryParams ->
+parse_paged_params : Dict Str Str -> Result { page : I64, items : I64 } _
+parse_paged_params = \query_params ->
 
-    maybePage = queryParams |> Dict.get "page" |> Result.try Str.toI64
-    maybeCount = queryParams |> Dict.get "items" |> Result.try Str.toI64
+    maybe_page = query_params |> Dict.get "page" |> Result.try Str.toI64
+    maybe_count = query_params |> Dict.get "items" |> Result.try Str.toI64
 
-    when (maybePage, maybeCount) is
+    when (maybe_page, maybe_count) is
         (Ok page, Ok items) if page >= 1 && items > 0 -> Ok { page, items }
         _ -> Err InvalidPagedParams
 
 expect
     "/bigTask?page=22&items=33"
-    |> parseQueryParams
-    |> Result.try parsePagedParams
+    |> parse_query_params
+    |> Result.try parse_paged_params
     ==
     Ok { page: 22, items: 33 }
 
 expect
     "/bigTask?page=0&count=33"
-    |> parseQueryParams
-    |> Result.try parsePagedParams
+    |> parse_query_params
+    |> Result.try parse_paged_params
     ==
     Err InvalidPagedParams
 
 expect
     "/bigTask"
-    |> parseQueryParams
-    |> Result.try parsePagedParams
+    |> parse_query_params
+    |> Result.try parse_paged_params
     ==
     Err (InvalidQuery "[\"/bigTask\"]")
 
-replaceQueryParams : { url : Str, params : Dict Str Str } -> Str
-replaceQueryParams = \{ url, params } ->
+replace_query_params : { url : Str, params : Dict Str Str } -> Str
+replace_query_params = \{ url, params } ->
     when Str.splitFirst url "?" is
         Ok { before } if Dict.isEmpty params -> "$(before)"
         Err NotFound if Dict.isEmpty params -> "$(url)"
-        Ok { before } -> "$(before)?$(queryParamsToStr params)"
-        Err NotFound -> "$(url)?$(queryParamsToStr params)"
+        Ok { before } -> "$(before)?$(query_params_to_str params)"
+        Err NotFound -> "$(url)?$(query_params_to_str params)"
 
-expect replaceQueryParams { url: "/bigTask", params: Dict.empty {} } == "/bigTask"
-expect replaceQueryParams { url: "/bigTask?items=33", params: Dict.empty {} } == "/bigTask"
-expect replaceQueryParams { url: "/bigTask?items=33", params: Dict.fromList [("page", "22")] } == "/bigTask?page=22"
+expect replace_query_params { url: "/bigTask", params: Dict.empty {} } == "/bigTask"
+expect replace_query_params { url: "/bigTask?items=33", params: Dict.empty {} } == "/bigTask"
+expect replace_query_params { url: "/bigTask?items=33", params: Dict.fromList [("page", "22")] } == "/bigTask?page=22"

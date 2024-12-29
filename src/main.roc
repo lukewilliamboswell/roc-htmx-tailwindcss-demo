@@ -20,39 +20,39 @@ import Controllers.Product
 import Controllers.User
 
 Model : {
-    basePath : Str,
-    dbPath : Str,
+    base_path : Str,
+    db_path : Str,
 }
 
 init! : {} => Result Model [Exit I32 Str]_
 init! = \_ ->
 
-    basePath = Env.var! "STATIC_FILES" |> Result.mapErr? UnableToReadStaticFiles
+    base_path = Env.var! "STATIC_FILES" |> Result.mapErr? UnableToReadStaticFiles
 
-    dbPath = Env.var! "DB_PATH" |> Result.mapErr? UnableToReadDbPATH
+    db_path = Env.var! "DB_PATH" |> Result.mapErr? UnableToReadDbPATH
 
     Ok {
-        basePath,
-        dbPath,
+        base_path,
+        db_path,
     }
 
 respond! : Request, Model => Result Response _
 respond! = \req, model ->
-    when handleReq! req model is
+    when handle_req! req model is
         Ok response -> Ok response
-        Err err -> (handleAppErr req) err
+        Err err -> (handle_app_err req) err
 
-handleAppErr : Request -> (_ => Result Response _)
-handleAppErr = \req -> \err ->
+handle_app_err : Request -> (_ => Result Response _)
+handle_app_err = \req -> \err ->
     when err is
         URLNotFound url ->
-            methodStr = Inspect.toStr req.method
-            errMsg = Str.joinWith ["404 NotFound" |> ANSI.color { fg: Standard Yellow }, methodStr, url] " "
-            Stderr.line!? errMsg
+            method_str = Inspect.toStr req.method
+            err_msg = Str.joinWith ["404 NotFound" |> ANSI.color { fg: Standard Yellow }, method_str, url] " "
+            Stderr.line!? err_msg
 
             Views.Pages.error404 {}
             |> Views.Layout.normal
-            |> Helpers.respondTemplate! 404 []
+            |> Helpers.respond_template! 404 []
 
         # InvalidSessionCookie ->
         #    Views.Pages.error404 {}
@@ -61,7 +61,7 @@ handleAppErr = \req -> \err ->
         Unauthorized ->
             Views.Pages.error401 {}
             |> Views.Layout.normal
-            |> Helpers.respondTemplate! 401 []
+            |> Helpers.respond_template! 401 []
 
         # NewSession sessionId ->
         #    # Redirect to the same URL with the new session ID
@@ -74,80 +74,80 @@ handleAppErr = \req -> \err ->
         #        body: [],
         #    }
         _ ->
-            errMsg = Str.joinWith ["500 Server Error" |> ANSI.color { fg: Standard Red }, Inspect.toStr err] " "
-            Stderr.line!? errMsg
+            err_msg = Str.joinWith ["500 Server Error" |> ANSI.color { fg: Standard Red }, Inspect.toStr err] " "
+            Stderr.line!? err_msg
 
             Views.Pages.error500 {}
             |> Views.Layout.normal
-            |> Helpers.respondTemplate! 500 []
+            |> Helpers.respond_template! 500 []
 
-handleReq! : Request, Model => Result Response _
-handleReq! = \req, model ->
+handle_req! : Request, Model => Result Response _
+handle_req! = \req, model ->
 
-    logRequest!? req # Log the date, time, method, and url to stdout
+    log_request!? req # Log the date, time, method, and url to stdout
 
-    urlSegments =
+    url_segments =
         req.uri
         |> Url.from_str
         |> Url.path
         |> Str.splitOn "/"
         |> List.dropFirst 1
 
-    queryParams =
+    query_params =
         req.uri
-        |> Helpers.parseQueryParams
+        |> Helpers.parse_query_params
         |> Result.withDefault (Dict.empty {})
 
     partial =
-        queryParams
+        query_params
         |> Dict.get "partial"
         |> Result.map \val -> if val == "true" then Bool.true else Bool.false
         |> Result.withDefault Bool.false
 
-    getStaticFile! = staticFile model.basePath
+    get_static_file! = static_file model.base_path
 
-    when (req.method, urlSegments) is
-        (GET, ["www", .. as rest]) -> getStaticFile! (Str.joinWith rest "/")
-        (GET, ["favicon.ico"]) -> getStaticFile! "favicon.ico"
-        (GET, ["android-chrome-192x192.png"]) -> getStaticFile! "android-chrome-192x192.png"
-        (GET, ["android-chrome-512x512.png"]) -> getStaticFile! "android-chrome-512x512.png"
+    when (req.method, url_segments) is
+        (GET, ["www", .. as rest]) -> get_static_file! (Str.joinWith rest "/")
+        (GET, ["favicon.ico"]) -> get_static_file! "favicon.ico"
+        (GET, ["android-chrome-192x192.png"]) -> get_static_file! "android-chrome-192x192.png"
+        (GET, ["android-chrome-512x512.png"]) -> get_static_file! "android-chrome-512x512.png"
         (GET, ["signin"]) ->
             Views.Pages.pageSignIn {}
             |> Views.Layout.normal
-            |> Helpers.respondTemplate! 200 []
+            |> Helpers.respond_template! 200 []
 
         (GET, ["signup"]) ->
             Views.Pages.pageSignUp {}
             |> Views.Layout.normal
-            |> Helpers.respondTemplate! 200 []
+            |> Helpers.respond_template! 200 []
 
         (GET, ["forgotpassword"]) ->
             Views.Pages.pageForgotPassword {}
             |> Views.Layout.normal
-            |> Helpers.respondTemplate! 200 []
+            |> Helpers.respond_template! 200 []
 
         (GET, ["resetpassword"]) ->
             Views.Pages.pageResetPassword {}
             |> Views.Layout.normal
-            |> Helpers.respondTemplate! 200 []
+            |> Helpers.respond_template! 200 []
 
         (GET, ["profilelock"]) ->
             Views.Pages.pageProfileLock {}
             |> Views.Layout.normal
-            |> Helpers.respondTemplate! 200 []
+            |> Helpers.respond_template! 200 []
 
         (GET, [""]) | (_, ["products", ..]) ->
-            Controllers.Product.handleRoutes! {
+            Controllers.Product.handle_routes! {
                 req,
-                urlSegments: List.dropFirst urlSegments 1,
-                dbPath: model.dbPath,
+                url_segments: List.dropFirst url_segments 1,
+                db_path: model.db_path,
             }
 
         (_, ["users", ..]) ->
-            Controllers.User.handleRoutes! {
+            Controllers.User.handle_routes! {
                 req,
-                urlSegments: List.dropFirst urlSegments 1,
-                dbPath: model.dbPath,
+                url_segments: List.dropFirst url_segments 1,
+                db_path: model.db_path,
             }
 
         (_, ["settings", ..]) ->
@@ -155,13 +155,13 @@ handleReq! = \req, model ->
 
             if partial then
                 view
-                |> Helpers.respondTemplate! 200 [
+                |> Helpers.respond_template! 200 [
                     { name: "HX-Push-Url", value: "/settings" },
                 ]
             else
                 view
                 |> Views.Layout.sidebar
-                |> Helpers.respondTemplate! 200 [
+                |> Helpers.respond_template! 200 [
                     { name: "HX-Push-Url", value: "/settings" },
                 ]
 
@@ -169,35 +169,35 @@ handleReq! = \req, model ->
         (GET, ["test500"]) -> Err Test500Error
         _ -> Err (URLNotFound req.uri)
 
-staticFile : Str -> (Str => Result Response _)
-staticFile = \basePath -> \relPath ->
+static_file : Str -> (Str => Result Response _)
+static_file = \base_path -> \rel_path ->
 
-    path = "$(basePath)/$(relPath)"
+    path = "$(base_path)/$(rel_path)"
 
     body =
         File.read_bytes! path
         |> Result.mapErr? \err -> ErrGettingStaticFile path (Inspect.toStr err)
 
-    bytesRead = List.len body
+    bytes_read = List.len body
 
-    Helpers.info!? "Read $(Num.toStr bytesRead) bytes for static file $(path)"
+    Helpers.info!? "Read $(Num.toStr bytes_read) bytes for static file $(path)"
 
-    contentTypeHeader =
-        if Str.endsWith relPath ".svg" then
+    content_type_header =
+        if Str.endsWith rel_path ".svg" then
             { name: "Content-Type", value: "image/svg+xml" }
-        else if Str.endsWith relPath ".css" then
+        else if Str.endsWith rel_path ".css" then
             { name: "Content-Type", value: "text/css" }
-        else if Str.endsWith relPath ".js" then
+        else if Str.endsWith rel_path ".js" then
             { name: "Content-Type", value: "application/javascript" }
-        else if Str.endsWith relPath ".ico" then
+        else if Str.endsWith rel_path ".ico" then
             { name: "Content-Type", value: "image/x-icon" }
-        else if Str.endsWith relPath ".png" then
+        else if Str.endsWith rel_path ".png" then
             { name: "Content-Type", value: "image/png" }
-        else if Str.endsWith relPath ".jpg" then
+        else if Str.endsWith rel_path ".jpg" then
             { name: "Content-Type", value: "image/jpeg" }
-        else if Str.endsWith relPath ".jpeg" then
+        else if Str.endsWith rel_path ".jpeg" then
             { name: "Content-Type", value: "image/jpeg" }
-        else if Str.endsWith relPath ".gif" then
+        else if Str.endsWith rel_path ".gif" then
             { name: "Content-Type", value: "image/gif" }
         else
             { name: "Content-Type", value: "application/octet-stream" }
@@ -206,13 +206,13 @@ staticFile = \basePath -> \relPath ->
         status: 200,
         headers: [
             { name: "Cache-Control", value: "max-age=3600" },
-            contentTypeHeader,
+            content_type_header,
         ],
         body,
     }
 
-logRequest! : Request => Result {} _
-logRequest! = \req ->
+log_request! : Request => Result {} _
+log_request! = \req ->
     date = Utc.to_iso_8601 (Utc.now! {})
     method = Inspect.toStr req.method
     url = req.uri

@@ -1,4 +1,4 @@
-module [Product, sampleData]
+module [Product, sample_data]
 
 Product : {
     id : I64,
@@ -10,5 +10,5 @@ Product : {
     discount : Str,
 }
 
-sampleData : List Product
-sampleData = []
+sample_data : List Product
+sample_data = []

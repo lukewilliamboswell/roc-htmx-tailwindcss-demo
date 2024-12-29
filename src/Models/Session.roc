@@ -1,6 +1,6 @@
 module [
     Session,
-    isAuthenticated,
+    is_authenticated,
 ]
 
 Session : {
@@ -8,8 +8,8 @@ Session : {
     user : [Guest, LoggedIn Str],
 }
 
-isAuthenticated : [Guest, LoggedIn Str] -> Result {} [Unauthorized]
-isAuthenticated = \user ->
+is_authenticated : [Guest, LoggedIn Str] -> Result {} [Unauthorized]
+is_authenticated = \user ->
     if user == Guest then
         Err Unauthorized
     else

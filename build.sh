@@ -6,6 +6,7 @@
 set -euxo pipefail
 
 # generate templates
+# NOTE THIS IS TEMPORARILY DISABLED
 # rtl -e "html" -i ./templates/ -o ./src/Views/
 
 # build app

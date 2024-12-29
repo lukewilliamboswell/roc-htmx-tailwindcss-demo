@@ -5,8 +5,8 @@ module [
 
 import Views.Pages
 
-headerTemplate : Str
-headerTemplate = Views.Pages.header {
+header_template : Str
+header_template = Views.Pages.header {
     authors: "Themesberg",
     description: "Get started with a free and open-source admin dashboard layout built with Tailwind CSS and Flowbite featuring charts, widgets, CRUD layouts, authentication pages, and more",
     stylesheet: Views.Pages.stylesheet {},
@@ -19,20 +19,20 @@ headerTemplate = Views.Pages.header {
 #    copyright: "",
 # }
 
-navbarTemplate : Str
-navbarTemplate = Views.Pages.navBar {
+navbar_template : Str
+navbar_template = Views.Pages.navBar {
     relURL: "",
 }
 
-sidebarTemplate : Str
-sidebarTemplate = Views.Pages.sidebar {
+sidebar_template : Str
+sidebar_template = Views.Pages.sidebar {
     ariaLabel: "Sidebar",
 }
 
 normal : Str -> Str
 normal = \content ->
     Views.Pages.layoutNormal {
-        header: headerTemplate,
+        header: header_template,
         content: content,
         footer: "",
         navbar: "",
@@ -41,9 +41,9 @@ normal = \content ->
 sidebar : Str -> Str
 sidebar = \content ->
     Views.Pages.layoutSidebar {
-        header: headerTemplate,
+        header: header_template,
         content,
         footer: "",
-        navbar: navbarTemplate,
-        sidebar: sidebarTemplate,
+        navbar: navbar_template,
+        sidebar: sidebar_template,
     }
