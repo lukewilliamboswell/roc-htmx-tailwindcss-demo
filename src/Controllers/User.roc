@@ -1,24 +1,24 @@
-module [handleRoutes]
+module [handleRoutes!]
 
 import web.Http exposing [Request, Response]
 import Sql.User
 # import Models.Session exposing [Session]
 import Views.Layout
 import Views.Pages
-import Helpers exposing [respondTemplate, parseQueryParams]
+import Helpers
 
-handleRoutes :
+handleRoutes! :
     {
         req : Request,
         urlSegments : List Str,
         dbPath : Str,
     }
-    -> Task Response _
-handleRoutes = \{ req, urlSegments, dbPath } ->
+    => Result Response _
+handleRoutes! = \{ req, urlSegments, dbPath } ->
 
     queryParams =
-        req.url
-        |> parseQueryParams
+        req.uri
+        |> Helpers.parseQueryParams
         |> Result.withDefault (Dict.empty {})
 
     partial =
@@ -28,8 +28,8 @@ handleRoutes = \{ req, urlSegments, dbPath } ->
         |> Result.withDefault Bool.false
 
     when (req.method, urlSegments) is
-        (Get, []) ->
-            users = Sql.User.list! { dbPath }
+        (GET, []) ->
+            users = Sql.User.list!? { dbPath }
 
             view = Views.Pages.pageUsers {
                 users,
@@ -37,14 +37,14 @@ handleRoutes = \{ req, urlSegments, dbPath } ->
 
             if partial then
                 view
-                |> respondTemplate 200 [
+                |> Helpers.respondTemplate! 200 [
                     { name: "HX-Push-Url", value: "/users" },
                 ]
             else
                 view
                 |> Views.Layout.sidebar
-                |> respondTemplate 200 [
+                |> Helpers.respondTemplate! 200 [
                     { name: "HX-Push-Url", value: "/users" },
                 ]
 
-        _ -> Task.err (NotHandled req)
+        _ -> Err (NotHandled req)

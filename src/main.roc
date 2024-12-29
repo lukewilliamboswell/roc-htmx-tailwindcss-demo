@@ -18,7 +18,7 @@ import Helpers
 import Views.Pages
 import Views.Layout
 #import Controllers.Product
-#import Controllers.User
+import Controllers.User
 
 Model : {
     basePath : Str,
@@ -148,12 +148,11 @@ handleReq! = \req, model ->
             return Err TODO
 
         (_, ["users", ..]) ->
-            # Controllers.User.handleRoutes {
-            #    req,
-            #    urlSegments: List.dropFirst urlSegments 1,
-            #    dbPath: model.dbPath,
-            # }
-            return Err TODO
+            Controllers.User.handleRoutes! {
+                req,
+                urlSegments: List.dropFirst urlSegments 1,
+                dbPath: model.dbPath,
+            }
 
         (_, ["settings", ..]) ->
             view = Views.Pages.pageSettings {}
