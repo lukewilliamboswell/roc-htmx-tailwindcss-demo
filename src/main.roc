@@ -9,7 +9,6 @@ import web.Stdout
 import web.Stderr
 import web.Http exposing [Request, Response]
 import web.Utc
-#import web.Path
 import web.File
 import web.Url
 import web.Env
@@ -17,7 +16,7 @@ import ansi.ANSI
 import Helpers
 import Views.Pages
 import Views.Layout
-#import Controllers.Product
+import Controllers.Product
 import Controllers.User
 
 Model : {
@@ -107,8 +106,6 @@ handleReq! = \req, model ->
 
     getStaticFile! = staticFile model.basePath
 
-    dbg urlSegments
-
     when (req.method, urlSegments) is
         (GET, ["www", .. as rest]) -> getStaticFile! (Str.joinWith rest "/")
         (GET, ["favicon.ico"]) -> getStaticFile! "favicon.ico"
@@ -140,12 +137,11 @@ handleReq! = \req, model ->
             |> Helpers.respondTemplate! 200 []
 
         (GET, [""]) | (_, ["products", ..]) ->
-            # Controllers.Product.handleRoutes {
-            #    req,
-            #    urlSegments: List.dropFirst urlSegments 1,
-            #    dbPath: model.dbPath,
-            # }
-            return Err TODO
+            Controllers.Product.handleRoutes! {
+                req,
+                urlSegments: List.dropFirst urlSegments 1,
+                dbPath: model.dbPath,
+            }
 
         (_, ["users", ..]) ->
             Controllers.User.handleRoutes! {

@@ -1,10 +1,10 @@
-module [list]
+module [list!]
 
 import Models.Product exposing [Product]
 import web.SQLite3
 
-list : { dbPath : Str } -> Task (List Product) _
-list = \{ dbPath } ->
+list! : { dbPath : Str } => Result (List Product) _
+list! = \{ dbPath } ->
 
     query =
         """
@@ -19,14 +19,15 @@ list = \{ dbPath } ->
         FROM  [products];
         """
 
-    {
-        path: dbPath,
-        query,
-        bindings: [],
-    }
-    |> SQLite3.execute
-    |> Task.mapErr SqlErrGettingProducts
-    |> Task.await \rows -> rows |> parseProductRows [] |> Task.fromResult
+    rows =
+        SQLite3.execute! {
+            path: dbPath,
+            query,
+            bindings: [],
+        }
+        |> Result.mapErr? SqlErrGettingProducts
+
+    parseProductRows rows []
 
 parseProductRows : List (List SQLite3.Value), List Product -> Result (List Product) _
 parseProductRows = \rows, acc ->

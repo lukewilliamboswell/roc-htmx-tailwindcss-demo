@@ -1,23 +1,23 @@
-module [handleRoutes]
+module [handleRoutes!]
 
 import web.Http exposing [Request, Response]
 import Sql.Product
 import Views.Layout
 import Views.Pages
-import Helpers exposing [respondTemplate, parseQueryParams]
+import Helpers
 
-handleRoutes :
+handleRoutes! :
     {
         req : Request,
         urlSegments : List Str,
         dbPath : Str,
     }
-    -> Task Response _
-handleRoutes = \{ req, urlSegments, dbPath } ->
+    => Result Response _
+handleRoutes! = \{ req, urlSegments, dbPath } ->
 
     queryParams =
-        req.url
-        |> parseQueryParams
+        req.uri
+        |> Helpers.parseQueryParams
         |> Result.withDefault (Dict.empty {})
 
     partial =
@@ -27,8 +27,8 @@ handleRoutes = \{ req, urlSegments, dbPath } ->
         |> Result.withDefault Bool.false
 
     when (req.method, urlSegments) is
-        (Get, []) ->
-            products = Sql.Product.list! { dbPath }
+        (GET, []) ->
+            products = Sql.Product.list!? { dbPath }
 
             view = Views.Pages.pageProducts {
                 products,
@@ -36,14 +36,14 @@ handleRoutes = \{ req, urlSegments, dbPath } ->
 
             if partial then
                 view
-                |> respondTemplate 200 [
+                |> Helpers.respondTemplate! 200 [
                     { name: "HX-Push-Url", value: "/products" },
                 ]
             else
                 view
                 |> Views.Layout.sidebar
-                |> respondTemplate 200 [
+                |> Helpers.respondTemplate! 200 [
                     { name: "HX-Push-Url", value: "/products" },
                 ]
 
-        _ -> Task.err (NotHandled req)
+        _ ->  Err (NotHandled req)
