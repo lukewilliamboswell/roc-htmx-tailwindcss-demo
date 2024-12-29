@@ -7,6 +7,10 @@ set -euxo pipefail
 
 # generate templates
 # NOTE THIS IS TEMPORARILY DISABLED
+# It generates Views/Pages.roc ok, but fails when `roc check`ing the file. So I've just
+# checked the Pages file in for now.
+#
+# Restore after https://github.com/roc-lang/roc/issues/7429
 # rtl -e "html" -i ./templates/ -o ./src/Views/
 
 # build app

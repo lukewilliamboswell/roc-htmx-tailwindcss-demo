@@ -4,13 +4,15 @@ Inspired by the [flowbite-admin-dashboard](https://github.com/themesberg/flowbit
 
 ![Demonstration of the web app](demo.gif)
 
-The goal of this repository is to be a good starting point for building web apps with roc, and demonstrate how to use familiar technologies like htmx and tailwindcss.
+This repo aims to provide a simple starting point for building web apps with roc using htmx and tailwindcss.
 
-There's a lot of things that can be improved... so if you would like to contribute to this demo, feel free to open an issue or submit a PR.
+There's a lot of things that can be improved, and I don't have a lot of time to dedicate to this, so please contribute to this demo and open an issue or submit a PR to help improve it.
 
 ## Getting Started
 
-To use the build script `bash build.sh`, you will need the following in your `PATH`variable;
+Build using the script `./build.sh`
+
+You will need the following on your `PATH`;
 1. [roc](https://www.roc-lang.org/install)
 2. [rtl](https://github.com/isaacvando/rtl)
 3. [tailwindcss](https://tailwindcss.com/docs/installation)
