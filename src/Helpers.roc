@@ -1,23 +1,24 @@
 module [
-    respondRedirect,
-    respondHtml,
+    respondRedirect!,
+    respondHtml!,
     decodeFormValues,
     parseQueryParams,
     queryParamsToStr,
     parsePagedParams,
     replaceQueryParams,
-    respondTemplate,
+    respondTemplate!,
     decodeMultiPartFormBoundary,
-    info,
+    info!,
 ]
 
 import web.Stdout
 import web.Http exposing [Response]
+import web.MultipartFormData exposing [parse_form_url_encoded]
 import html.Html
 
-respondRedirect : Str -> Task Response []_
-respondRedirect = \next ->
-    Task.ok {
+respondRedirect! : Str => Result Response []_
+respondRedirect! = \next ->
+    Ok {
         status: 303,
         headers: [
             { name: "Location", value: next },
@@ -25,9 +26,9 @@ respondRedirect = \next ->
         body: [],
     }
 
-respondHtml : Html.Node, List { name : Str, value : Str } -> Task Response []_
-respondHtml = \node, otherHeaders ->
-    Task.ok {
+respondHtml! : Html.Node, List { name : Str, value : Str } => Result Response []_
+respondHtml! = \node, otherHeaders ->
+    Ok {
         status: 200,
         headers: [
             { name: "Content-Type", value: "text/html; charset=utf-8" },
@@ -36,16 +37,15 @@ respondHtml = \node, otherHeaders ->
         body: Str.toUtf8 (Html.render node),
     }
 
-decodeFormValues : List U8 -> Task (Dict Str Str) _
+decodeFormValues : List U8 -> Result (Dict Str Str) _
 decodeFormValues = \body ->
-    Http.parseFormUrlEncoded body
+    parse_form_url_encoded body
     |> Result.mapErr \BadUtf8 -> BadRequest InvalidFormEncoding
-    |> Task.fromResult
 
 parseQueryParams : Str -> Result (Dict Str Str) _
 parseQueryParams = \url ->
     when Str.splitOn url "?" is
-        [_, queryPart] -> queryPart |> Str.toUtf8 |> Http.parseFormUrlEncoded
+        [_, queryPart] -> queryPart |> Str.toUtf8 |> parse_form_url_encoded
         parts -> Err (InvalidQuery (Inspect.toStr parts))
 
 queryParamsToStr : Dict Str Str -> Str
@@ -104,9 +104,9 @@ expect replaceQueryParams { url: "/bigTask", params: Dict.empty {} } == "/bigTas
 expect replaceQueryParams { url: "/bigTask?items=33", params: Dict.empty {} } == "/bigTask"
 expect replaceQueryParams { url: "/bigTask?items=33", params: Dict.fromList [("page", "22")] } == "/bigTask?page=22"
 
-respondTemplate : Str, U16, _ -> Task Response []_
-respondTemplate = \html, status, headers ->
-    Task.ok {
+respondTemplate! : Str, U16, _ => Result Response []_
+respondTemplate! = \html, status, headers ->
+    Ok {
         status,
         headers: List.concat headers [
             { name: "Content-Type", value: "text/html; charset=utf-8" },
@@ -125,6 +125,6 @@ decodeMultiPartFormBoundary = \headers ->
             Ok { after } -> Ok (Str.toUtf8 after)
             Err err -> Err (InvalidContentTypeHeader err value)
 
-info : Str -> Task {} _
-info = \msg ->
+info! : Str => Result {} _
+info! = \msg ->
     Stdout.line! "\u(001b)[34mINFO:\u(001b)[0m $(msg)"
